@@ -55,6 +55,34 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		35EF6AFD2E4330D700448D5C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 35EF6AF82E4330D700448D5C /* PFAssistiveFramework4.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 9909E8781E71CE8300D8F827;
+			remoteInfo = PFAssistiveFramework4;
+		};
+		35EF6AFF2E4330D700448D5C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 35EF6AF82E4330D700448D5C /* PFAssistiveFramework4.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 9909E8811E71CE8300D8F827;
+			remoteInfo = PFAssistiveFramework4Tests;
+		};
+		35EF6B062E43310400448D5C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 35EF6B012E43310400448D5C /* PFAccessibilityAuthorizer2.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 990C4BBD1FB1E60400378355;
+			remoteInfo = PFAccessibilityAuthorizer2;
+		};
+		35EF6B082E43310400448D5C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 35EF6B012E43310400448D5C /* PFAccessibilityAuthorizer2.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 990C4BC61FB1E60400378355;
+			remoteInfo = PFAccessibilityAuthorizer2Tests;
+		};
 		9909E8521E71CDD800D8F827 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9909E8381E71CDD800D8F827 /* Project object */;
@@ -87,6 +115,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		35EF6AF82E4330D700448D5C /* PFAssistiveFramework4.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = PFAssistiveFramework4.xcodeproj; sourceTree = "<group>"; };
+		35EF6B012E43310400448D5C /* PFAccessibilityAuthorizer2.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = PFAccessibilityAuthorizer2.xcodeproj; sourceTree = "<group>"; };
 		9904CF721F53316600FAEFE3 /* PFAssistiveFramework4.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = PFAssistiveFramework4.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9909E8401E71CDD800D8F827 /* UI Browser.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "UI Browser.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9909E8431E71CDD800D8F827 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -163,9 +193,29 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		35EF6AF92E4330D700448D5C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				35EF6AFE2E4330D700448D5C /* PFAssistiveFramework4.framework */,
+				35EF6B002E4330D700448D5C /* PFAssistiveFramework4Tests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		35EF6B022E43310400448D5C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				35EF6B072E43310400448D5C /* PFAccessibilityAuthorizer2.framework */,
+				35EF6B092E43310400448D5C /* PFAccessibilityAuthorizer2Tests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		9909E8371E71CDD800D8F827 = {
 			isa = PBXGroup;
 			children = (
+				35EF6B012E43310400448D5C /* PFAccessibilityAuthorizer2.xcodeproj */,
+				35EF6AF82E4330D700448D5C /* PFAssistiveFramework4.xcodeproj */,
 				990C4BD91FB208BF00378355 /* PFAccessibilityAuthorizer2.framework */,
 				9904CF721F53316600FAEFE3 /* PFAssistiveFramework4.framework */,
 				9909E8421E71CDD800D8F827 /* UIBrowser4 */,
@@ -358,7 +408,7 @@
 					9909E83F1E71CDD800D8F827 = {
 						CreatedOnToolsVersion = 8.2.1;
 						LastSwiftMigration = 1020;
-						ProvisioningStyle = Manual;
+						ProvisioningStyle = Automatic;
 					};
 					9909E8501E71CDD800D8F827 = {
 						CreatedOnToolsVersion = 8.2.1;
@@ -385,6 +435,16 @@
 			mainGroup = 9909E8371E71CDD800D8F827;
 			productRefGroup = 9909E8411E71CDD800D8F827 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 35EF6B022E43310400448D5C /* Products */;
+					ProjectRef = 35EF6B012E43310400448D5C /* PFAccessibilityAuthorizer2.xcodeproj */;
+				},
+				{
+					ProductGroup = 35EF6AF92E4330D700448D5C /* Products */;
+					ProjectRef = 35EF6AF82E4330D700448D5C /* PFAssistiveFramework4.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				9909E83F1E71CDD800D8F827 /* UIBrowser4 */,
@@ -393,6 +453,37 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		35EF6AFE2E4330D700448D5C /* PFAssistiveFramework4.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = PFAssistiveFramework4.framework;
+			remoteRef = 35EF6AFD2E4330D700448D5C /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		35EF6B002E4330D700448D5C /* PFAssistiveFramework4Tests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = PFAssistiveFramework4Tests.xctest;
+			remoteRef = 35EF6AFF2E4330D700448D5C /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		35EF6B072E43310400448D5C /* PFAccessibilityAuthorizer2.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = PFAccessibilityAuthorizer2.framework;
+			remoteRef = 35EF6B062E43310400448D5C /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		35EF6B092E43310400448D5C /* PFAccessibilityAuthorizer2Tests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = PFAccessibilityAuthorizer2Tests.xctest;
+			remoteRef = 35EF6B082E43310400448D5C /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		9909E83E1E71CDD800D8F827 /* Resources */ = {
@@ -554,7 +645,7 @@
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 84;
 				DEAD_CODE_STRIPPING = YES;
@@ -617,7 +708,7 @@
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 84;
 				DEAD_CODE_STRIPPING = YES;
@@ -649,20 +740,22 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Manual;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
 				DEFINES_MODULE = NO;
-				DEVELOPMENT_TEAM = 9T7C9JS843;
-				"DEVELOPMENT_TEAM[sdk=macosx*]" = Z7S6X96M3X;
+				DEVELOPMENT_TEAM = LYHL23M4SH;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)/**",
-					"$(PROJECT_DIR)/**",
+					"$(inherited)",
+					"$(BUILT_PRODUCTS_DIR)",
 				);
 				INFOPLIST_FILE = UIBrowser4/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "UI Browser 4";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.pfiddlesoft.UIBrowser4;
+				MARKETING_VERSION = "";
+				PRODUCT_BUNDLE_IDENTIFIER = com.fjoaempire.UIBrowser4;
 				PRODUCT_NAME = "UI Browser";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "UIBrowser4/UIBrowser4-Bridging-Header.h";
@@ -679,20 +772,22 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Manual;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
 				DEFINES_MODULE = NO;
-				DEVELOPMENT_TEAM = 9T7C9JS843;
-				"DEVELOPMENT_TEAM[sdk=macosx*]" = Z7S6X96M3X;
+				DEVELOPMENT_TEAM = LYHL23M4SH;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)/**",
-					"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/PFAssistiveFramework4.framework",
+					"$(inherited)",
+					"$(BUILT_PRODUCTS_DIR)",
 				);
 				INFOPLIST_FILE = UIBrowser4/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "UI Browser 4";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.pfiddlesoft.UIBrowser4;
+				MARKETING_VERSION = "";
+				PRODUCT_BUNDLE_IDENTIFIER = com.fjoaempire.UIBrowser4;
 				PRODUCT_NAME = "UI Browser";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "UIBrowser4/UIBrowser4-Bridging-Header.h";

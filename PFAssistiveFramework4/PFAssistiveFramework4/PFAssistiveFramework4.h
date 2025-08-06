@@ -2,13 +2,11 @@
 //  PFAssistiveFramework4.h
 //  PFAssistiveFramework4
 //
-//  Created by Bill Cheeseman on 2017-03-09.
-//  Copyright © 2003-2020 Bill Cheeseman. All rights reserved. Used by permission.
-//
-//  Version 4.0.0
+//  Created by Christopher Madison on 2024-08-06.
+//  Copyright © 2024 Christopher Madison. All rights reserved.
 //
 
-#import <Cocoa/Cocoa.h>
+#import <Foundation/Foundation.h>
 
 //! Project version number for PFAssistiveFramework4.
 FOUNDATION_EXPORT double PFAssistiveFramework4VersionNumber;
