@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="21701" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="21701"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="MonitoringViewController" customModule="UIBrowser4" customModuleProvider="target">
+            <connections>
+                <outlet property="clearButton" destination="clear-btn" id="clear-out"/>
+                <outlet property="includeChildrenCheckbox" destination="child-check" id="child-out"/>
+                <outlet property="attributesTable" destination="attr-table" id="attr-table-out"/>
+                <outlet property="notificationsTable" destination="notif-table" id="notif-table-out"/>
+                <outlet property="startStopButton" destination="start-btn" id="start-out"/>
+                <outlet property="updateIntervalLabel" destination="interval-label" id="interval-label-out"/>
+                <outlet property="updateIntervalSlider" destination="interval-slider" id="interval-slider-out"/>
+                <outlet property="view" destination="main-view" id="view-out"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <customView id="main-view">
+            <rect key="frame" x="0.0" y="0.0" width="600" height="500"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <subviews>
+                <box title="Monitoring Controls" translatesAutoresizingMaskIntoConstraints="NO" id="ctrl-box">
+                    <rect key="frame" x="20" y="400" width="560" height="80"/>
+                    <view key="contentView" id="ctrl-view">
+                        <rect key="frame" x="3" y="3" width="554" height="62"/>
+                        <subviews>
+                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="start-btn">
+                                <rect key="frame" x="10" y="20" width="120" height="32"/>
+                                <buttonCell key="cell" type="push" title="Start Monitoring" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="start-cell"/>
+                                <connections>
+                                    <action selector="toggleMonitoring:" target="-2" id="toggle-action"/>
+                                </connections>
+                            </button>
+                            <button translatesAutoresizingMaskIntoConstraints="NO" id="child-check">
+                                <rect key="frame" x="140" y="25" width="120" height="18"/>
+                                <buttonCell key="cell" type="check" title="Include Children" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="child-cell"/>
+                                <connections>
+                                    <action selector="includeChildrenChanged:" target="-2" id="child-action"/>
+                                </connections>
+                            </button>
+                            <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="interval-label">
+                                <rect key="frame" x="270" y="25" width="100" height="16"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Update Interval:" id="interval-cell">
+                                    <font key="font" metaFont="system"/>
+                                </textFieldCell>
+                            </textField>
+                            <slider verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="interval-slider">
+                                <rect key="frame" x="380" y="24" width="96" height="19"/>
+                                <sliderCell key="cell" continuous="YES" state="on" alignment="left" minValue="0.1" maxValue="5" doubleValue="1" tickMarkPosition="below" numberOfTickMarks="10" sliderType="linear" id="slider-cell"/>
+                                <connections>
+                                    <action selector="updateIntervalChanged:" target="-2" id="interval-action"/>
+                                </connections>
+                            </slider>
+                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="clear-btn">
+                                <rect key="frame" x="484" y="20" width="60" height="32"/>
+                                <buttonCell key="cell" type="push" title="Clear" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="clear-cell"/>
+                                <connections>
+                                    <action selector="clearHistory:" target="-2" id="clear-action"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                    </view>
+                </box>
+                <splitView arrangesAllSubviews="NO" dividerStyle="thin" vertical="YES" translatesAutoresizingMaskIntoConstraints="NO" id="split-view">
+                    <rect key="frame" x="20" y="20" width="560" height="360"/>
+                    <subviews>
+                        <scrollView autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="attr-scroll">
+                            <rect key="frame" x="0.0" y="0.0" width="274" height="360"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                            <clipView key="contentView" id="attr-clip">
+                                <rect key="frame" x="1" y="1" width="272" height="358"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <subviews>
+                                    <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" columnReordering="NO" multipleSelection="NO" autosaveColumns="NO" headerView="attr-header" id="attr-table">
+                                        <rect key="frame" x="0.0" y="0.0" width="272" height="330"/>
+                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                        <size key="intercellSpacing" width="3" height="2"/>
+                                        <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                        <tableViewGridLines key="gridStyleMask" vertical="YES" horizontal="YES"/>
+                                        <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
+                                        <tableColumns>
+                                            <tableColumn identifier="timestamp" width="65" minWidth="40" maxWidth="1000" id="time-col">
+                                                <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="Time">
+                                                    <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
+                                                </tableHeaderCell>
+                                                <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" title="Text Cell" id="time-cell">
+                                                    <font key="font" metaFont="system"/>
+                                                    <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                            </tableColumn>
+                                            <tableColumn identifier="attribute" width="100" minWidth="40" maxWidth="1000" id="attr-col">
+                                                <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="Attribute">
+                                                    <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
+                                                </tableHeaderCell>
+                                                <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" title="Text Cell" id="attr-cell">
+                                                    <font key="font" metaFont="system"/>
+                                                    <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                            </tableColumn>
+                                            <tableColumn identifier="value" width="100" minWidth="40" maxWidth="1000" id="val-col">
+                                                <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="Value">
+                                                    <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
+                                                </tableHeaderCell>
+                                                <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" title="Text Cell" id="val-cell">
+                                                    <font key="font" metaFont="system"/>
+                                                    <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                            </tableColumn>
+                                        </tableColumns>
+                                    </tableView>
+                                </subviews>
+                            </clipView>
+                            <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="attr-hscroll"/>
+                            <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="attr-vscroll"/>
+                            <tableHeaderView key="headerView" wantsLayer="YES" id="attr-header"/>
+                        </scrollView>
+                        <scrollView autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="notif-scroll">
+                            <rect key="frame" x="285" y="0.0" width="275" height="360"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                            <clipView key="contentView" id="notif-clip">
+                                <rect key="frame" x="1" y="1" width="273" height="358"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <subviews>
+                                    <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" columnReordering="NO" multipleSelection="NO" autosaveColumns="NO" headerView="notif-header" id="notif-table">
+                                        <rect key="frame" x="0.0" y="0.0" width="273" height="330"/>
+                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                        <size key="intercellSpacing" width="3" height="2"/>
+                                        <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                        <tableViewGridLines key="gridStyleMask" vertical="YES" horizontal="YES"/>
+                                        <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
+                                        <tableColumns>
+                                            <tableColumn identifier="timestamp" width="65" minWidth="40" maxWidth="1000" id="ntime-col">
+                                                <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="Time">
+                                                    <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
+                                                </tableHeaderCell>
+                                                <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" title="Text Cell" id="ntime-cell">
+                                                    <font key="font" metaFont="system"/>
+                                                    <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                            </tableColumn>
+                                            <tableColumn identifier="notification" width="100" minWidth="40" maxWidth="1000" id="notif-col">
+                                                <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="Notification">
+                                                    <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
+                                                </tableHeaderCell>
+                                                <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" title="Text Cell" id="notif-cell">
+                                                    <font key="font" metaFont="system"/>
+                                                    <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                            </tableColumn>
+                                            <tableColumn identifier="info" width="100" minWidth="40" maxWidth="1000" id="info-col">
+                                                <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="Info">
+                                                    <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
+                                                </tableHeaderCell>
+                                                <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" title="Text Cell" id="info-cell">
+                                                    <font key="font" metaFont="system"/>
+                                                    <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                    <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                </textFieldCell>
+                                            </tableColumn>
+                                        </tableColumns>
+                                    </tableView>
+                                </subviews>
+                            </clipView>
+                            <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="notif-hscroll"/>
+                            <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="notif-vscroll"/>
+                            <tableHeaderView key="headerView" wantsLayer="YES" id="notif-header"/>
+                        </scrollView>
+                    </subviews>
+                    <holdingPriorities>
+                        <real value="250"/>
+                        <real value="250"/>
+                    </holdingPriorities>
+                </splitView>
+            </subviews>
+            <constraints>
+                <constraint firstItem="ctrl-box" firstAttribute="top" secondItem="main-view" secondAttribute="top" constant="20" id="ctrl-top"/>
+                <constraint firstItem="ctrl-box" firstAttribute="leading" secondItem="main-view" secondAttribute="leading" constant="20" id="ctrl-left"/>
+                <constraint firstAttribute="trailing" secondItem="ctrl-box" secondAttribute="trailing" constant="20" id="ctrl-right"/>
+                <constraint firstItem="split-view" firstAttribute="top" secondItem="ctrl-box" secondAttribute="bottom" constant="20" id="split-top"/>
+                <constraint firstItem="split-view" firstAttribute="leading" secondItem="main-view" secondAttribute="leading" constant="20" id="split-left"/>
+                <constraint firstAttribute="trailing" secondItem="split-view" secondAttribute="trailing" constant="20" id="split-right"/>
+                <constraint firstAttribute="bottom" secondItem="split-view" secondAttribute="bottom" constant="20" id="split-bottom"/>
+            </constraints>
+        </customView>
+    </objects>
+</document>

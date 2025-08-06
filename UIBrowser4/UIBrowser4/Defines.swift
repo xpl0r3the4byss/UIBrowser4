@@ -1,6 +1,6 @@
 //
 //  Defines.swift
-//  UIBrowser3
+//  UIBrowser4
 //
 //  Created by Bill Cheeseman on 2017-03-11.
 //  Copyright © 2003-2020 Bill Cheeseman. All rights reserved. Used by permission.

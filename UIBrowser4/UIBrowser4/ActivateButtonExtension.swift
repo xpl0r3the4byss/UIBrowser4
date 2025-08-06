@@ -1,6 +1,6 @@
 //
 //  ActivateButtonExtension.swift
-//  UIBrowser3
+//  UIBrowser4
 //
 //  Created by Bill Cheeseman on 2017-11-06.
 //  Copyright © 2017-2020 PFiddlesoft. All rights reserved.

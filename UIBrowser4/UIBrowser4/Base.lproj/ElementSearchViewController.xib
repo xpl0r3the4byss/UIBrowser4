@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="21701" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="21701"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="ElementSearchViewController" customModule="UIBrowser4" customModuleProvider="target">
+            <connections>
+                <outlet property="attributeTable" destination="attr-table" id="attr-out"/>
+                <outlet property="caseSensitiveCheckbox" destination="case-check" id="case-out"/>
+                <outlet property="deletePresetButton" destination="delete-btn" id="delete-out"/>
+                <outlet property="enabledCheckbox" destination="enabled-check" id="enabled-out"/>
+                <outlet property="focusedCheckbox" destination="focused-check" id="focused-out"/>
+                <outlet property="presetPopup" destination="preset-popup" id="preset-out"/>
+                <outlet property="regexCheckbox" destination="regex-check" id="regex-out"/>
+                <outlet property="rolePopup" destination="role-popup" id="role-out"/>
+                <outlet property="savePresetButton" destination="save-btn" id="save-out"/>
+                <outlet property="searchField" destination="search-field" id="search-out"/>
+                <outlet property="subrolePopup" destination="subrole-popup" id="subrole-out"/>
+                <outlet property="view" destination="view-main" id="view-out"/>
+                <outlet property="visibleCheckbox" destination="visible-check" id="visible-out"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <customView id="view-main">
+            <rect key="frame" x="0.0" y="0.0" width="500" height="400"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <subviews>
+                <searchField wantsLayer="YES" verticalHuggingPriority="750" textCompletion="NO" translatesAutoresizingMaskIntoConstraints="NO" id="search-field">
+                    <rect key="frame" x="20" y="358" width="460" height="22"/>
+                    <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" usesSingleLineMode="YES" bezelStyle="round" id="search-cell">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </searchFieldCell>
+                </searchField>
+                <box title="Filter" translatesAutoresizingMaskIntoConstraints="NO" id="filter-box">
+                    <rect key="frame" x="17" y="196" width="466" height="154"/>
+                    <view key="contentView" id="filter-content">
+                        <rect key="frame" x="3" y="3" width="460" height="134"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="role-label">
+                                <rect key="frame" x="18" y="98" width="40" height="16"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Role:" id="role-label-cell">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="role-popup">
+                                <rect key="frame" x="62" y="92" width="180" height="25"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="180" id="role-width"/>
+                                </constraints>
+                                <popUpButtonCell key="cell" type="push" title="Any" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="role-any" id="role-cell">
+                                    <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                    <menu key="menu" id="role-menu">
+                                        <items>
+                                            <menuItem title="Any" state="on" id="role-any"/>
+                                        </items>
+                                    </menu>
+                                </popUpButtonCell>
+                                <connections>
+                                    <action selector="roleChanged:" target="-2" id="role-action"/>
+                                </connections>
+                            </popUpButton>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="subrole-label">
+                                <rect key="frame" x="250" y="98" width="60" height="16"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Subrole:" id="subrole-label-cell">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="subrole-popup">
+                                <rect key="frame" x="314" y="92" width="180" height="25"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="180" id="subrole-width"/>
+                                </constraints>
+                                <popUpButtonCell key="cell" type="push" title="Any" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="subrole-any" id="subrole-cell">
+                                    <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                    <menu key="menu" id="subrole-menu">
+                                        <items>
+                                            <menuItem title="Any" state="on" id="subrole-any"/>
+                                        </items>
+                                    </menu>
+                                </popUpButtonCell>
+                                <connections>
+                                    <action selector="subroleChanged:" target="-2" id="subrole-action"/>
+                                </connections>
+                            </popUpButton>
+                            <button translatesAutoresizingMaskIntoConstraints="NO" id="enabled-check">
+                                <rect key="frame" x="20" y="68" width="200" height="18"/>
+                                <buttonCell key="cell" type="check" title="Enabled Elements Only" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="enabled-cell">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="optionChanged:" target="-2" id="enabled-action"/>
+                                </connections>
+                            </button>
+                            <button translatesAutoresizingMaskIntoConstraints="NO" id="focused-check">
+                                <rect key="frame" x="20" y="44" width="200" height="18"/>
+                                <buttonCell key="cell" type="check" title="Focused Elements Only" bezelStyle="regularSquare" imagePosition="left" inset="2" id="focused-cell">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="optionChanged:" target="-2" id="focused-action"/>
+                                </connections>
+                            </button>
+                            <button translatesAutoresizingMaskIntoConstraints="NO" id="visible-check">
+                                <rect key="frame" x="20" y="20" width="200" height="18"/>
+                                <buttonCell key="cell" type="check" title="Visible Elements Only" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="visible-cell">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="optionChanged:" target="-2" id="visible-action"/>
+                                </connections>
+                            </button>
+                            <button translatesAutoresizingMaskIntoConstraints="NO" id="regex-check">
+                                <rect key="frame" x="250" y="68" width="200" height="18"/>
+                                <buttonCell key="cell" type="check" title="Use Regular Expressions" bezelStyle="regularSquare" imagePosition="left" inset="2" id="regex-cell">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="optionChanged:" target="-2" id="regex-action"/>
+                                </connections>
+                            </button>
+                            <button translatesAutoresizingMaskIntoConstraints="NO" id="case-check">
+                                <rect key="frame" x="250" y="44" width="200" height="18"/>
+                                <buttonCell key="cell" type="check" title="Case Sensitive" bezelStyle="regularSquare" imagePosition="left" inset="2" id="case-cell">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="optionChanged:" target="-2" id="case-action"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <constraints>
+                            <constraint firstItem="role-label" firstAttribute="top" secondItem="filter-content" secondAttribute="top" constant="20" id="role-label-top"/>
+                            <constraint firstItem="role-label" firstAttribute="leading" secondItem="filter-content" secondAttribute="leading" constant="20" id="role-label-left"/>
+                            <constraint firstItem="role-popup" firstAttribute="centerY" secondItem="role-label" secondAttribute="centerY" id="role-popup-center"/>
+                            <constraint firstItem="role-popup" firstAttribute="leading" secondItem="role-label" secondAttribute="trailing" constant="8" id="role-popup-left"/>
+                            <constraint firstItem="subrole-label" firstAttribute="centerY" secondItem="role-label" secondAttribute="centerY" id="subrole-label-center"/>
+                            <constraint firstItem="subrole-label" firstAttribute="leading" secondItem="role-popup" secondAttribute="trailing" constant="20" id="subrole-label-left"/>
+                            <constraint firstItem="subrole-popup" firstAttribute="centerY" secondItem="subrole-label" secondAttribute="centerY" id="subrole-popup-center"/>
+                            <constraint firstItem="subrole-popup" firstAttribute="leading" secondItem="subrole-label" secondAttribute="trailing" constant="8" id="subrole-popup-left"/>
+                            <constraint firstItem="enabled-check" firstAttribute="top" secondItem="role-popup" secondAttribute="bottom" constant="12" id="enabled-top"/>
+                            <constraint firstItem="enabled-check" firstAttribute="leading" secondItem="role-label" secondAttribute="leading" id="enabled-left"/>
+                            <constraint firstItem="focused-check" firstAttribute="top" secondItem="enabled-check" secondAttribute="bottom" constant="8" id="focused-top"/>
+                            <constraint firstItem="focused-check" firstAttribute="leading" secondItem="enabled-check" secondAttribute="leading" id="focused-left"/>
+                            <constraint firstItem="visible-check" firstAttribute="top" secondItem="focused-check" secondAttribute="bottom" constant="8" id="visible-top"/>
+                            <constraint firstItem="visible-check" firstAttribute="leading" secondItem="focused-check" secondAttribute="leading" id="visible-left"/>
+                            <constraint firstItem="regex-check" firstAttribute="top" secondItem="enabled-check" secondAttribute="top" id="regex-top"/>
+                            <constraint firstItem="regex-check" firstAttribute="leading" secondItem="subrole-label" secondAttribute="leading" id="regex-left"/>
+                            <constraint firstItem="case-check" firstAttribute="top" secondItem="focused-check" secondAttribute="top" id="case-top"/>
+                            <constraint firstItem="case-check" firstAttribute="leading" secondItem="regex-check" secondAttribute="leading" id="case-left"/>
+                        </constraints>
+                    </view>
+                </box>
+                <box title="Attribute Filters" translatesAutoresizingMaskIntoConstraints="NO" id="attr-box">
+                    <rect key="frame" x="17" y="56" width="466" height="134"/>
+                    <view key="contentView" id="attr-content">
+                        <rect key="frame" x="3" y="3" width="460" height="114"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <scrollView autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="attr-scroll">
+                                <rect key="frame" x="0.0" y="0.0" width="460" height="114"/>
+                                <clipView key="contentView" id="attr-clip">
+                                    <rect key="frame" x="1" y="1" width="458" height="112"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                    <subviews>
+                                        <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" columnSelection="YES" multipleSelection="NO" autosaveColumns="NO" headerView="header" id="attr-table">
+                                            <rect key="frame" x="0.0" y="0.0" width="458" height="84"/>
+                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                            <size key="intercellSpacing" width="17" height="0.0"/>
+                                            <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                            <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
+                                            <tableColumns>
+                                                <tableColumn identifier="attribute" width="200" minWidth="40" maxWidth="1000" id="attr-col">
+                                                    <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="Attribute">
+                                                        <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
+                                                        <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
+                                                    </tableHeaderCell>
+                                                    <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" title="Text Cell" id="attr-cell">
+                                                        <font key="font" metaFont="system"/>
+                                                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                        <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                    </textFieldCell>
+                                                    <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
+                                                </tableColumn>
+                                                <tableColumn identifier="value" width="200" minWidth="40" maxWidth="1000" id="value-col">
+                                                    <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="Value">
+                                                        <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
+                                                        <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
+                                                    </tableHeaderCell>
+                                                    <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" title="Text Cell" id="value-cell">
+                                                        <font key="font" metaFont="system"/>
+                                                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                        <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                    </textFieldCell>
+                                                    <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
+                                                </tableColumn>
+                                            </tableColumns>
+                                        </tableView>
+                                    </subviews>
+                                </clipView>
+                                <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="h-scroll"/>
+                                <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="v-scroll"/>
+                                <tableHeaderView key="headerView" wantsLayer="YES" id="header"/>
+                            </scrollView>
+                        </subviews>
+                        <constraints>
+                            <constraint firstItem="attr-scroll" firstAttribute="top" secondItem="attr-content" secondAttribute="top" id="scroll-top"/>
+                            <constraint firstItem="attr-scroll" firstAttribute="leading" secondItem="attr-content" secondAttribute="leading" id="scroll-left"/>
+                            <constraint firstAttribute="trailing" secondItem="attr-scroll" secondAttribute="trailing" id="scroll-right"/>
+                            <constraint firstAttribute="bottom" secondItem="attr-scroll" secondAttribute="bottom" id="scroll-bottom"/>
+                        </constraints>
+                    </view>
+                </box>
+                <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="preset-popup">
+                    <rect key="frame" x="18" y="13" width="200" height="25"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="200" id="preset-width"/>
+                    </constraints>
+                    <popUpButtonCell key="cell" type="push" title="Custom" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="custom" id="preset-cell">
+                        <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                        <menu key="menu" id="preset-menu">
+                            <items>
+                                <menuItem title="Custom" state="on" id="custom"/>
+                            </items>
+                        </menu>
+                    </popUpButtonCell>
+                    <connections>
+                        <action selector="presetSelected:" target="-2" id="preset-action"/>
+                    </connections>
+                </popUpButton>
+                <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="save-btn">
+                    <rect key="frame" x="318" y="13" width="82" height="32"/>
+                    <buttonCell key="cell" type="push" title="Save" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="save-cell">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="savePreset:" target="-2" id="save-action"/>
+                    </connections>
+                </button>
+                <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="delete-btn">
+                    <rect key="frame" x="400" y="13" width="82" height="32"/>
+                    <buttonCell key="cell" type="push" title="Delete" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="delete-cell">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="deletePreset:" target="-2" id="delete-action"/>
+                    </connections>
+                </button>
+            </subviews>
+            <constraints>
+                <constraint firstItem="search-field" firstAttribute="top" secondItem="view-main" secondAttribute="top" constant="20" id="search-top"/>
+                <constraint firstItem="search-field" firstAttribute="leading" secondItem="view-main" secondAttribute="leading" constant="20" id="search-left"/>
+                <constraint firstAttribute="trailing" secondItem="search-field" secondAttribute="trailing" constant="20" id="search-right"/>
+                <constraint firstItem="filter-box" firstAttribute="top" secondItem="search-field" secondAttribute="bottom" constant="8" id="filter-top"/>
+                <constraint firstItem="filter-box" firstAttribute="leading" secondItem="view-main" secondAttribute="leading" constant="20" id="filter-left"/>
+                <constraint firstAttribute="trailing" secondItem="filter-box" secondAttribute="trailing" constant="20" id="filter-right"/>
+                <constraint firstItem="attr-box" firstAttribute="top" secondItem="filter-box" secondAttribute="bottom" constant="8" id="attr-top"/>
+                <constraint firstItem="attr-box" firstAttribute="leading" secondItem="filter-box" secondAttribute="leading" id="attr-left"/>
+                <constraint firstItem="attr-box" firstAttribute="trailing" secondItem="filter-box" secondAttribute="trailing" id="attr-right"/>
+                <constraint firstItem="preset-popup" firstAttribute="top" secondItem="attr-box" secondAttribute="bottom" constant="20" id="preset-top"/>
+                <constraint firstItem="preset-popup" firstAttribute="leading" secondItem="attr-box" secondAttribute="leading" id="preset-left"/>
+                <constraint firstItem="save-btn" firstAttribute="centerY" secondItem="preset-popup" secondAttribute="centerY" id="save-center"/>
+                <constraint firstItem="delete-btn" firstAttribute="leading" secondItem="save-btn" secondAttribute="trailing" constant="12" id="delete-left"/>
+                <constraint firstItem="delete-btn" firstAttribute="centerY" secondItem="save-btn" secondAttribute="centerY" id="delete-center"/>
+                <constraint firstAttribute="trailing" secondItem="delete-btn" secondAttribute="trailing" constant="20" id="delete-right"/>
+                <constraint firstAttribute="bottom" secondItem="preset-popup" secondAttribute="bottom" constant="20" id="preset-bottom"/>
+            </constraints>
+            <point key="canvasLocation" x="139" y="154"/>
+        </customView>
+    </objects>
+</document>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="21701" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="21701"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="BrowserTabItemViewController" customModule="UIBrowser4" customModuleProvider="target">
+            <connections>
+                <outlet property="browserPathControl" destination="path-ctrl" id="path-out"/>
+                <outlet property="elementBrowser" destination="browser" id="browser-out"/>
+                <outlet property="view" destination="view-main" id="view-out"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <customView id="view-main">
+            <rect key="frame" x="0.0" y="0.0" width="600" height="400"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <subviews>
+                <pathControl verticalHuggingPriority="750" allowsExpansionToolTips="YES" translatesAutoresizingMaskIntoConstraints="NO" id="path-ctrl">
+                    <rect key="frame" x="20" y="360" width="560" height="20"/>
+                    <pathCell key="cell" controlSize="small" selectable="YES" editable="YES" alignment="left" placeholderString="No Target" id="path-cell">
+                        <font key="font" metaFont="smallSystem"/>
+                    </pathCell>
+                    <connections>
+                        <action selector="popUpPathControlMenu:" target="-2" id="path-action"/>
+                    </connections>
+                </pathControl>
+                <browser customClass="KeyboardNavigableBrowser" customModule="UIBrowser4" customModuleProvider="target" verticalHuggingPriority="750" horizontalHuggingPriority="750" allowsExpansionToolTips="YES" enabled="NO" hasHorizontalScroller="YES" hasVerticalScroller="YES" defaultColumnWidth="220" minColumnWidth="100" maxVisibleColumns="5" titled="YES" separatesColumns="YES" allowsTypeSelect="YES" columnResizingType="auto" rowHeight="16" viewBased="NO" id="browser">
+                    <rect key="frame" x="20" y="20" width="560" height="320"/>
+                    <connections>
+                        <action selector="selectElement:" target="-2" id="browser-action"/>
+                        <outlet property="delegate" destination="-2" id="browser-delegate"/>
+                    </connections>
+                </browser>
+            </subviews>
+            <constraints>
+                <constraint firstItem="path-ctrl" firstAttribute="top" secondItem="view-main" secondAttribute="top" constant="20" id="path-top"/>
+                <constraint firstItem="path-ctrl" firstAttribute="leading" secondItem="view-main" secondAttribute="leading" constant="20" id="path-left"/>
+                <constraint firstAttribute="trailing" secondItem="path-ctrl" secondAttribute="trailing" constant="20" id="path-right"/>
+                <constraint firstItem="browser" firstAttribute="top" secondItem="path-ctrl" secondAttribute="bottom" constant="20" id="browser-top"/>
+                <constraint firstItem="browser" firstAttribute="leading" secondItem="view-main" secondAttribute="leading" constant="20" id="browser-left"/>
+                <constraint firstAttribute="trailing" secondItem="browser" secondAttribute="trailing" constant="20" id="browser-right"/>
+                <constraint firstAttribute="bottom" secondItem="browser" secondAttribute="bottom" constant="20" id="browser-bottom"/>
+            </constraints>
+        </customView>
+    </objects>
+</document>

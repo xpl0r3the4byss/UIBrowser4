@@ -1,15 +1,15 @@
 //
-//  UIBrowser3Tests.swift
-//  UIBrowser3Tests
+//  UIBrowser4Tests.swift
+//  UIBrowser4Tests
 //
 //  Created by Bill Cheeseman on 2017-03-09.
 //  Copyright © 2017 PFiddlesoft. All rights reserved.
 //
 
 import XCTest
-@testable import UIBrowser3
+@testable import UIBrowser4
 
-class UIBrowser3Tests: XCTestCase {
+class UIBrowser4Tests: XCTestCase {
     
     override func setUp() {
         super.setUp()

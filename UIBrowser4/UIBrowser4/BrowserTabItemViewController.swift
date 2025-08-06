@@ -1,6 +1,6 @@
 //
 //  BrowserTabItemViewController.swift
-//  UIBrowser3
+//  UIBrowser4
 //
 //  Created by Bill Cheeseman on 2017-03-10.
 //  Copyright © 2003-2020 Bill Cheeseman. All rights reserved. Used by permission.
@@ -30,7 +30,7 @@ import PFAssistiveFramework4
  
  The browser view's primary navigation tool is a path control at the top of the browser tab view item. See ElementPathControlManager.swift for details. The browser view also supports navigation using the mouse and keyboard to select parent, sibling and child UI elements at any level in the currently displayed outline. A contextual menu like that in the list view is not needed because a browser view already incorporates equivalent functionality.
  */
-class BrowserTabItemViewController: NSViewController, NSBrowserDelegate {
+class BrowserTabItemViewController: BaseElementViewController, NSBrowserDelegate {
 
     // MARK: - PROPERTIES
     
@@ -49,15 +49,124 @@ class BrowserTabItemViewController: NSViewController, NSBrowserDelegate {
     /// An outlet connected to the path control.
     @IBOutlet weak var browserPathControl: NSPathControl!
     
+    // MARK: - Combine Subscriptions
+    
+    private var cancellables = Set<AnyCancellable>()
+    
+    // MARK: - ElementViewProtocol Implementation
+    
+    override var pathControl: NSPathControl {
+        return browserPathControl
+    }
+    
     /// An outlet connected to the element browser view.
     @IBOutlet weak var elementBrowser: NSBrowser!
+    
+    // MARK: - Error Handling
+    
+    enum BrowserError: LocalizedError {
+        case elementInvalid
+        case elementDestroyed
+        case accessDenied
+        case attributeError
+        case unexpectedNilValue
+        case unknownError
+        
+        var errorDescription: String? {
+            switch self {
+            case .elementInvalid:
+                return "Invalid accessibility element"
+            case .elementDestroyed:
+                return "Element has been destroyed"
+            case .accessDenied:
+                return "Access denied to element"
+            case .attributeError:
+                return "Error accessing element attribute"
+            case .unexpectedNilValue:
+                return "Unexpected nil value encountered"
+            case .unknownError:
+                return "Unknown error occurred"
+            }
+        }
+    }
+    
+    // MARK: - Async Support
+    
+    /// Asynchronously update the browser view for a new target element
+    private func setupStateObservation() {
+        // Observe current element state
+        ElementDataModel.statePublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] state in
+                guard let self = self else { return }
+                
+                if state.isLoading {
+                    // Show loading state
+                    elementBrowser.isEnabled = false
+                } else {
+                    // Update browser state
+                    elementBrowser.isEnabled = true
+                    elementBrowser.reloadData()
+                    
+                    if let path = state.currentPath {
+                        elementBrowser.selectionIndexPath = path as IndexPath
+                        elementBrowser.scrollColumnToVisible(elementBrowser.lastColumn)
+                    }
+                    
+                    view.window?.makeFirstResponder(elementBrowser)
+                }
+            }
+            .store(in: &cancellables)
+    }
+    
+    @MainActor
+    override func updateView() async throws {
+        try await super.updateView()
+        
+        // Display the element browser
+        elementBrowser.loadColumnZero()
+        elementBrowser.selectRow(0, inColumn: 0)
+        elementBrowser.scrollColumnToVisible(elementBrowser.lastColumn)
+        
+        view.window?.makeFirstResponder(elementBrowser)
+    }
+    
+    /// Asynchronously show the current browser view state
+    @MainActor
+    func showViewAsync() async throws {
+        elementBrowser.loadColumnZero()
+        
+        let dataSource = ElementDataModel.sharedInstance
+        if let currentElementIndexPath = await dataSource.currentElementIndexPath {
+            // Display the path control
+            elementPathControlManager.displayPathControl(browserPathControl)
+            
+            // Display the element browser columns
+            for column in 1..<currentElementIndexPath.length {
+                elementBrowser.reloadColumn(column)
+            }
+            
+            // Select and scroll to the current element
+            elementBrowser.selectionIndexPath = currentElementIndexPath as IndexPath
+            let selectedColumn = currentElementIndexPath.length - 1
+            let selectedRow = currentElementIndexPath.index(atPosition: selectedColumn)
+            elementBrowser.scrollColumnToVisible(elementBrowser.lastColumn)
+            elementBrowser.scrollRowToVisible(selectedRow, inColumn: selectedColumn)
+            
+            view.window?.makeFirstResponder(elementBrowser)
+        } else {
+            clearView()
+        }
+    }
     
     // MARK: - VIEW MANAGEMENT
     
     // MARK: NSViewController Override Methods
     
     override func viewDidLoad() {
-       super.viewDidLoad()
+        super.viewDidLoad()
+        
+        setupStateObservation()
         
         // Set the shared type property to self to give access to this object from any other object by referencing BrowserTabItemViewController.sharedInstance. It was created in Main.storyboard at launch.
         BrowserTabItemViewController.sharedInstance = self
@@ -222,6 +331,52 @@ class BrowserTabItemViewController: NSViewController, NSBrowserDelegate {
  */
     // TODO: Update the rest of the UI Browser interface based on the selected element, using stuff from old version as appropriate.
     @IBAction func selectElement(_ sender: Any) {
+        Task {
+            do {
+                if let menuItem = sender as? NSMenuItem {
+                    // Handle element selection from browser path control
+                    let dataSource = ElementDataModel.sharedInstance
+                    
+                    // Clear any saved path that was cached when menu opened
+                    await dataSource.unsaveCurrentElementIndexPath()
+                    
+                    // Get info about selected element
+                    if let selectedNode = menuItem.representedObject as? ElementDataModel.ElementNodeInfo {
+                        let selectedIndexPath = await dataSource.indexPath(ofNode: selectedNode)
+                        let selectedLevel = selectedIndexPath.length - 1
+                        let selectedIndex = selectedIndexPath.index(atPosition: selectedLevel)
+                        
+                        // Update model and view
+                        try await dataSource.updateDataModelForCurrentElementAt(level: selectedLevel, index: selectedIndex)
+                        try await showViewAsync()
+                    }
+                } else if let browser = sender as? NSBrowser {
+                    // Handle element selection using mouse or keyboard
+                    guard browser.selectedColumn >= 0 else { return }
+                    
+                    let selectedRow = browser.selectedRow(inColumn: browser.selectedColumn)
+                    browser.selectRow(selectedRow, inColumn: browser.selectedColumn)
+                    browser.scrollColumnToVisible(browser.lastColumn)
+                    
+                    // Update data model and interface
+                    let dataSource = ElementDataModel.sharedInstance
+                    try await dataSource.updateDataModelForCurrentElementAt(
+                        level: browser.selectedColumn,
+                        index: selectedRow
+                    )
+                    
+                    elementPathControlManager.displayPathControl(browserPathControl)
+                }
+            } catch {
+                await browserState.setError(error as? BrowserError ?? .unknownError)
+                // Present error to user
+                let alert = NSAlert()
+                alert.messageText = "Error Selecting Element"
+                alert.informativeText = error.localizedDescription
+                alert.alertStyle = .warning
+                alert.runModal()
+            }
+        }
         // Action method connected programmatically to the sending browser path control pop-up menu item in the ElementPathControlManager menuNeedsUpdate(_:) delegate method using MasterSplitItemViewController currentTabItemSelectElementAction(). The @objc attribute is implied by @IBAction and is required to use the #selector expression when connecting the action. This action method is also connected to First Responder in the Main.storyboard Browser Tab Item View Controller Scene to handle mouse and keyboard selection.
         
         // NOTE about NSBrowser's clickedRow and clickedColumn properties:
@@ -460,7 +615,29 @@ class BrowserTabItemViewController: NSViewController, NSBrowserDelegate {
     }
 */
     
+    @MainActor
     func browser(_ sender: NSBrowser, selectRow row: Int, inColumn column: Int) -> Bool {
+        Task {
+            do {
+                await browserState.addPendingUpdate(column)
+                defer { Task { await browserState.removePendingUpdate(column) } }
+                
+                // Update the data model
+                let dataSource = ElementDataModel.sharedInstance
+                try await dataSource.updateDataModelForCurrentElementAt(level: column, index: row)
+                
+                // Update the display
+                elementPathControlManager.displayPathControl(browserPathControl)
+                
+                return true
+            } catch {
+                await browserState.setError(error as? BrowserError ?? .unknownError)
+                return false
+            }
+        }
+        
+        // Return true synchronously to allow the selection, actual update happens async
+        return true
         // Optional delegate method per the NSBrowserDelegate formal protocol. Called programmatically when the user chooses a new target application in the menu bar's Target menu or the Target popup button's menu, or triggered automatically when the user selects a new existing element with the mouse or keyboard. When the user chooses a new target application, one of the choose...Target action methods results in a call to updateView(), which calls NSBrowser loadColumnZero() to trigger the browser's data source methods to display the root application UI element, and it then calls NSBrowser selectRow(_:inColumn:) to trigger this delegate method to add the application element's children. When the user selects a new existing element with the mouse or keyboard, it sends the selectElement(_:) action method, which calls selectRow(_:inColumn:) to trigger this delegate method to add the selected element's children.
         // IMPORTANT NOTE: UI Browser does not implement the browser(_:selectionIndexesForProposedSelection:inColumn:) delegate method because it is not triggered by user clicks in the browser's current selection path. The NSBrowserDelegate reference document says that it "Asks the delegate for a set of indexes to select when the user changes the selection in the browser with the keyboard or mouse." As a result, the browser would not be updated when the user selects an element that is already in the selection path. This is efficient in the general case from NSBrowser's point of view, because descendant elements in the browser are presumed to remain valid and it would be a waste of time to remove them. However, UI Browser needs to display information specific to the newly selected element in the detail (bottom) split item view even if it is in the selection path.
         
@@ -478,6 +655,25 @@ class BrowserTabItemViewController: NSViewController, NSBrowserDelegate {
 
         return true
     }
+    
+    private actor BrowserState {
+        var pendingUpdates: Set<Int> = []
+        var errorState: BrowserError?
+        
+        func addPendingUpdate(_ column: Int) {
+            pendingUpdates.insert(column)
+        }
+        
+        func removePendingUpdate(_ column: Int) {
+            pendingUpdates.remove(column)
+        }
+        
+        func setError(_ error: BrowserError?) {
+            errorState = error
+        }
+    }
+    
+    private let browserState = BrowserState()
     
     func browser(_ sender: NSBrowser, titleOfColumn column: Int) -> String? {
         // Optional delegate method per the NSBrowserDelegate formal protocol. Returns the title to display above the specified column. In Main.storyboard, the Titled setting must be selected, and the browser's Top Space to Superview and the browserVew's Top Space to Browser constraints must be set to default values to leave room for the column titles to display. ViewDidLoad() must set the browser's takesTitleFromPreviousColumn title to false because it defaults to true.

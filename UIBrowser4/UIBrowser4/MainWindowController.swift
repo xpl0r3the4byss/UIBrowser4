@@ -1,6 +1,6 @@
 //
 //  MainWindowController.swift
-//  UIBrowser3
+//  UIBrowser4
 //
 //  Created by Bill Cheeseman on 2017-03-10.
 //  Copyright © 2003-2020 Bill Cheeseman. All rights reserved. Used by permission.
@@ -110,7 +110,7 @@ class MainWindowController: NSWindowController, NSWindowDelegate, NSMenuDelegate
                 return
         }
 
-        /// UI Browser's display name (or "UIBrowser3" when debugging in Xcode).
+        /// UI Browser's display name (or "UIBrowser4" when debugging in Xcode).
         let UIBrowserName = FileManager.default.displayName(atPath: UIBrowserPath)
         
         /// The target's menu item title.

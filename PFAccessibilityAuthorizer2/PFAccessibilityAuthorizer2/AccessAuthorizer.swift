@@ -37,7 +37,7 @@ import Cocoa
  
  The `willPresentAccessAlertNotification` and `didDismissAccessAlertNotification` notifications are posted immediately before and after the framework presents its sheets or modal alerts informing the user that access was granted or denied. The notification object is the `NSRunningApplication` object that is the `current` application. These notifications contain a `userInfo` dictionary holding a dictionary with a value of `true` or `false` for the key `useSheetsKey`, letting observers know whether framework alerts are presented as sheets (`true`) or modal alerts (`false`). Register to observe these notifications as needed to handle any client application alert that may be open when one of these framework alerts is about to be presented and to clean up after it is dismissed.
  */
-public class AccessAuthorizer: NSObject {
+@objc public final class AccessAuthorizer: NSObject {
     // AccessAuthorizer is a subclass of NSObject because it requires some NSObject features. For example, the accessibilityListDidChange(_:) notification method performs the noteNewAccessStatus(_:) method's selector.
     
     // MARK: - PROPERTIES
@@ -77,7 +77,7 @@ public class AccessAuthorizer: NSObject {
     // MARK: Internal properties
     
     /// Enumeration type for saving the access status of the client application as 'Access.granted' or 'Access.denied'.
-    enum Access {
+    private enum Access {
         case granted, denied
         mutating func set(_ flag: Bool) {
             self = flag ? .granted : .denied
@@ -85,16 +85,23 @@ public class AccessAuthorizer: NSObject {
     }
     
     /// Enumeration value saving the access status of the client application. It is set to the current value in `init()` and updated when changed in `noteNewAccessStatus(_:)`.
-    var accessStatus = Access.denied // default value
+    private var accessStatus = Access.denied // default value
     
     /// `Bool` value controlling whether the client application presents the built-in system modal alert to request access. It defaults to `false`, causing the framework to use the framework's custom Request Access alert, instead. It is set to `true` if the convenience initializer's `systemAlert` parameter value is `true`. If `useSystemAccessAlert` is `true`, the framework ignores the `useSheets` property with respect to the built-in system modal alert because it is only available as an application-modal dialog.
-    var useSystemAccessAlert = false // default value
+    private var useSystemAccessAlert = false // default value
     
     /// A `tuple` value controlling whether the client application presents the framework's alerts as document-modal sheets to request access and to notify the user that access has been granted or denied. The `flag` element of the tuple value defaults to `false`, causing the framework to use application-modal dialogs. It is set to `true` if the convenience initializer's `sheets` parameter value is `true`. If the `useSystemAccessAlert` property is `true`, the framework ignores the `useSheets` property with respect to the built-in system modal access alert because it is only available as an application-modal dialog, but the other alerts are still presented as document-modal sheets if `useSheets` is `true`.
-    var useSheets: (flag: Bool, parentWindow: NSWindow?) = (false, nil) // default value
+    private struct SheetConfig {
+        var flag: Bool
+        weak var parentWindow: NSWindow?
+        
+        static let `default` = SheetConfig(flag: false, parentWindow: nil)
+    }
+    
+    private var useSheets: SheetConfig = .default
     
     /// `NSAlert` value used by `alertRequestAccess()`, `alertDidGrantAccess()` and `alertDidDenyAccess()` to hold a configured access alert while the `NSApplication` `didBecomeActiveNotification` is observed and, after a delay, calls `presentRequestSheet()` or `presentGrantOrDenySheet()`.
-    var pendingAlert: NSAlert? = nil
+    private var pendingAlert: NSAlert? = nil
     
     // MARK: - INITIALIZATION
     
@@ -187,7 +194,7 @@ public class AccessAuthorizer: NSObject {
      
      - note: The equivalent *QSWAccessibilityAuthorizer* method is `- updateAccessibilityList:`.
      */
-    func updateAccessibilityList() {
+    private func updateAccessibilityList() {
         // Setting the option dictionary's value to false for the kAXTrustedCheckOptionPrompt key is not needed because the AXIsProcessTrustedWithOptions(_:) function is documented to behave the same when nil is passed in the parameter.
         AXIsProcessTrustedWithOptions(nil); // ignore result
     }
@@ -262,7 +269,7 @@ public class AccessAuthorizer: NSObject {
      
      - parameter notification: A notification named `didFinishLaunchingNotification`. Calling the object method of this notification returns the `NSApplication` object itself.
      */
-    @objc func applicationDidFinishLaunching(_ notification: NSNotification) {
+    @objc private func applicationDidFinishLaunching(_ notification: NSNotification) {
         requestAccess()
     }
     
@@ -275,7 +282,7 @@ public class AccessAuthorizer: NSObject {
      
      - parameter notification: A notification named `willTerminateNotification`. Calling the object method of this notification returns the `NSApplication` object itself.
      */
-    @objc func applicationWillTerminate(_ notification: NSNotification) {
+    @objc private func applicationWillTerminate(_ notification: NSNotification) {
         // Apple's reference documentation for NSNotificationCenter says this about removing observers: "If your app targets ... macOS 10.11 and later, you don't need to unregister an observer in its dealloc method."
         DistributedNotificationCenter.default.removeObserver(self)
         NotificationCenter.default.removeObserver(self)
@@ -294,7 +301,7 @@ public class AccessAuthorizer: NSObject {
      
      - parameter notification: The "com.apple.accessibility.api" distributed notification.
      */
-    @objc func accessibilityListDidChange(_ notification: NSNotification) {
+    @objc private func accessibilityListDidChange(_ notification: NSNotification) {
         // This timer requires macOS Sierra 10.12 or later.
         var elapsedTime = 0.0
         let maxTime = 1.0
@@ -324,7 +331,7 @@ public class AccessAuthorizer: NSObject {
      
      - note: The equivalent *QSWAccessibilityAuthorizer* method is `-noteNewAccessStatus`.
      */
-    func noteNewAccessStatus(_ status: Access) {
+    private func noteNewAccessStatus(_ status: Access) {
         // Update the accessStatus instance property.
         accessStatus = status
         
@@ -385,7 +392,7 @@ public class AccessAuthorizer: NSObject {
      
      - note: The equivalent *QSWAccessibilityAuthorizer* method is `-alertAccessNotAllowed`.
      */
-    func alertRequestAccess() {
+    private func alertRequestAccess() {
 
         // Get the name of the application requiring access. The displayName is preferred per Apple Technical Q&A QA1544 because it reflects any change made in the Finder.
         guard let path = NSRunningApplication.current.bundleURL?.path else {
@@ -433,7 +440,7 @@ public class AccessAuthorizer: NSObject {
      
      - note: The equivalent *QSWAccessibilityAuthorizer* method is `-alertAccessDenied`.
      */
-    func alertDidDenyAccess() {
+    private func alertDidDenyAccess() {
         
         // Get the name of the application requiring access. The displayName is preferred for display per Apple Technical Q&A QA1544 because it reflects any change made in the Finder.
         guard let path = NSRunningApplication.current.bundleURL?.path else {
@@ -481,7 +488,7 @@ public class AccessAuthorizer: NSObject {
      
      - note: The equivalent *QSWAccessibilityAuthorizer* method is `-alertAccessGranted`.
      */
-    func alertDidGrantAccess() {
+    private func alertDidGrantAccess() {
         
         // Get the name of the application requiring access. The displayName is preferred for display per Apple Technical Q&A QA1544 because it reflects any change made in the Finder.
         guard let path = NSRunningApplication.current.bundleURL?.path else {
@@ -519,7 +526,7 @@ public class AccessAuthorizer: NSObject {
     /**
      Presents the pending Request Access alert as a document-modal sheet. The sheet is attached to the client application window specified by the `useSheets.parentwindow` instance property or, if the `parentWindow` element is `nil`, then to its main window. If the main window is `nil`, presents the alert as an application-modal dialog.
      */
-    @objc func presentRequestSheet() {
+    @objc private func presentRequestSheet() {
         guard let alert = pendingAlert else {return}
         
         // Set the parent window.
@@ -552,7 +559,7 @@ public class AccessAuthorizer: NSObject {
     /**
      Presents the pending Request Access alert as an application-modal dialog.
      */
-    @objc func presentRequestDialog() {
+    @objc private func presentRequestDialog() {
         guard let alert = pendingAlert else {return}
         
         alert.window.preventsApplicationTerminationWhenModal = false
@@ -572,7 +579,7 @@ public class AccessAuthorizer: NSObject {
     /**
      Presents the pending Access Granted or Access Denied alert as a document-modal sheet. The sheet is attached to the client application window specified by the `useSheets.parentwindow` instance property or, if the `parentWindow` element is `nil`, then to its main window. If the main window is `nil`, presents the alert as an application-modal dialog.
      */
-    @objc func presentGrantOrDenySheet() {
+    @objc private func presentGrantOrDenySheet() {
         guard let alert = pendingAlert else {return}
         
         // Set the parent window.
@@ -611,7 +618,7 @@ public class AccessAuthorizer: NSObject {
     /**
      Presents the pending Access Granted or Access Denied alert as an application-modal dialog.
      */
-    @objc func presentGrantOrDenyDialog() {
+    @objc private func presentGrantOrDenyDialog() {
         guard let alert = pendingAlert else {return}
         
         alert.window.preventsApplicationTerminationWhenModal = false

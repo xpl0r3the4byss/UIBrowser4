@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="21701" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="21701"/>
+        <plugIn identifier="com.apple.WebKit2IBPlugin" version="21701"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="HelpViewController" customModule="UIBrowser4" customModuleProvider="target">
+            <connections>
+                <outlet property="backButton" destination="back-btn" id="back-out"/>
+                <outlet property="contentWebView" destination="web-view" id="web-out"/>
+                <outlet property="forwardButton" destination="forward-btn" id="forward-out"/>
+                <outlet property="searchField" destination="search-field" id="search-out"/>
+                <outlet property="sidebarOutlineView" destination="outline" id="outline-out"/>
+                <outlet property="view" destination="view-main" id="view-out"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <customView id="view-main">
+            <rect key="frame" x="0.0" y="0.0" width="800" height="600"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <subviews>
+                <splitView dividerStyle="thin" vertical="YES" translatesAutoresizingMaskIntoConstraints="NO" id="split">
+                    <rect key="frame" x="0.0" y="0.0" width="800" height="600"/>
+                    <subviews>
+                        <customView id="sidebar" fixedFrame="YES">
+                            <rect key="frame" x="0.0" y="0.0" width="250" height="600"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                            <subviews>
+                                <searchField wantsLayer="YES" verticalHuggingPriority="750" textCompletion="NO" translatesAutoresizingMaskIntoConstraints="NO" id="search-field">
+                                    <rect key="frame" x="20" y="558" width="210" height="22"/>
+                                    <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" usesSingleLineMode="YES" bezelStyle="round" id="search-cell">
+                                        <font key="font" metaFont="system"/>
+                                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                    </searchFieldCell>
+                                </searchField>
+                                <scrollView autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="outline-scroll">
+                                    <rect key="frame" x="0.0" y="0.0" width="250" height="538"/>
+                                    <clipView key="contentView" id="outline-clip">
+                                        <rect key="frame" x="1" y="1" width="248" height="536"/>
+                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                        <subviews>
+                                            <outlineView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" selectionHighlightStyle="sourceList" multipleSelection="NO" autosaveColumns="NO" rowSizeStyle="automatic" viewBased="YES" indentationPerLevel="16" outlineTableColumn="outline-column" id="outline">
+                                                <rect key="frame" x="0.0" y="0.0" width="248" height="536"/>
+                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                <size key="intercellSpacing" width="3" height="2"/>
+                                                <color key="backgroundColor" name="sourceListBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
+                                                <tableColumns>
+                                                    <tableColumn identifier="Cell" width="245" minWidth="16" maxWidth="1000" id="outline-column">
+                                                        <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border">
+                                                            <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
+                                                            <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
+                                                        </tableHeaderCell>
+                                                        <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" title="Text Cell" id="cell-proto">
+                                                            <font key="font" metaFont="system"/>
+                                                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                            <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                        </textFieldCell>
+                                                        <tableColumnResizingMask key="resizingMask" resizeWithTable="YES"/>
+                                                        <prototypeCellViews>
+                                                            <tableCellView identifier="Cell" id="cell-view">
+                                                                <rect key="frame" x="1" y="1" width="245" height="17"/>
+                                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                                <subviews>
+                                                                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="cell-field">
+                                                                        <rect key="frame" x="0.0" y="0.0" width="245" height="17"/>
+                                                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                                                                        <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Table View Cell" id="cell-text">
+                                                                            <font key="font" metaFont="system"/>
+                                                                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                                        </textFieldCell>
+                                                                    </textField>
+                                                                </subviews>
+                                                                <connections>
+                                                                    <outlet property="textField" destination="cell-field" id="cell-connect"/>
+                                                                </connections>
+                                                            </tableCellView>
+                                                        </prototypeCellViews>
+                                                    </tableColumn>
+                                                </tableColumns>
+                                            </outlineView>
+                                        </subviews>
+                                    </clipView>
+                                    <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="h-scroll"/>
+                                    <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="v-scroll"/>
+                                </scrollView>
+                            </subviews>
+                            <constraints>
+                                <constraint firstItem="search-field" firstAttribute="top" secondItem="sidebar" secondAttribute="top" constant="20" id="search-top"/>
+                                <constraint firstItem="search-field" firstAttribute="leading" secondItem="sidebar" secondAttribute="leading" constant="20" id="search-left"/>
+                                <constraint firstAttribute="trailing" secondItem="search-field" secondAttribute="trailing" constant="20" id="search-right"/>
+                                <constraint firstItem="outline-scroll" firstAttribute="top" secondItem="search-field" secondAttribute="bottom" constant="20" id="outline-top"/>
+                                <constraint firstItem="outline-scroll" firstAttribute="leading" secondItem="sidebar" secondAttribute="leading" id="outline-left"/>
+                                <constraint firstAttribute="trailing" secondItem="outline-scroll" secondAttribute="trailing" id="outline-right"/>
+                                <constraint firstAttribute="bottom" secondItem="outline-scroll" secondAttribute="bottom" id="outline-bottom"/>
+                            </constraints>
+                        </customView>
+                        <customView id="content" fixedFrame="YES">
+                            <rect key="frame" x="251" y="0.0" width="549" height="600"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                            <subviews>
+                                <box boxType="custom" borderType="none" title="Box" translatesAutoresizingMaskIntoConstraints="NO" id="toolbar">
+                                    <rect key="frame" x="0.0" y="550" width="549" height="50"/>
+                                    <view key="contentView" id="toolbar-content">
+                                        <rect key="frame" x="0.0" y="0.0" width="549" height="50"/>
+                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                        <subviews>
+                                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="back-btn">
+                                                <rect key="frame" x="20" y="13" width="24" height="24"/>
+                                                <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" image="chevron.left" catalog="system" imagePosition="only" alignment="center" imageScaling="proportionallyDown" inset="2" id="back-cell">
+                                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                    <font key="font" metaFont="system"/>
+                                                </buttonCell>
+                                                <connections>
+                                                    <action selector="goBack:" target="-2" id="back-action"/>
+                                                </connections>
+                                            </button>
+                                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="forward-btn">
+                                                <rect key="frame" x="52" y="13" width="24" height="24"/>
+                                                <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" image="chevron.right" catalog="system" imagePosition="only" alignment="center" imageScaling="proportionallyDown" inset="2" id="forward-cell">
+                                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                    <font key="font" metaFont="system"/>
+                                                </buttonCell>
+                                                <connections>
+                                                    <action selector="goForward:" target="-2" id="forward-action"/>
+                                                </connections>
+                                            </button>
+                                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="home-btn">
+                                                <rect key="frame" x="84" y="13" width="24" height="24"/>
+                                                <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" image="house" catalog="system" imagePosition="only" alignment="center" imageScaling="proportionallyDown" inset="2" id="home-cell">
+                                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                    <font key="font" metaFont="system"/>
+                                                </buttonCell>
+                                                <connections>
+                                                    <action selector="showHome:" target="-2" id="home-action"/>
+                                                </connections>
+                                            </button>
+                                        </subviews>
+                                        <constraints>
+                                            <constraint firstItem="back-btn" firstAttribute="leading" secondItem="toolbar-content" secondAttribute="leading" constant="20" id="back-left"/>
+                                            <constraint firstItem="back-btn" firstAttribute="centerY" secondItem="toolbar-content" secondAttribute="centerY" id="back-center"/>
+                                            <constraint firstItem="forward-btn" firstAttribute="leading" secondItem="back-btn" secondAttribute="trailing" constant="8" id="forward-left"/>
+                                            <constraint firstItem="forward-btn" firstAttribute="centerY" secondItem="back-btn" secondAttribute="centerY" id="forward-center"/>
+                                            <constraint firstItem="home-btn" firstAttribute="leading" secondItem="forward-btn" secondAttribute="trailing" constant="8" id="home-left"/>
+                                            <constraint firstItem="home-btn" firstAttribute="centerY" secondItem="forward-btn" secondAttribute="centerY" id="home-center"/>
+                                        </constraints>
+                                    </view>
+                                    <constraints>
+                                        <constraint firstAttribute="height" constant="50" id="toolbar-height"/>
+                                    </constraints>
+                                </box>
+                                <wkWebView wantsLayer="YES" translatesAutoresizingMaskIntoConstraints="NO" id="web-view">
+                                    <rect key="frame" x="0.0" y="0.0" width="549" height="550"/>
+                                    <wkWebViewConfiguration key="configuration">
+                                        <audiovisualMediaTypes key="mediaTypesRequiringUserActionForPlayback" none="YES"/>
+                                        <wkPreferences key="preferences"/>
+                                    </wkWebViewConfiguration>
+                                </wkWebView>
+                            </subviews>
+                            <constraints>
+                                <constraint firstItem="toolbar" firstAttribute="top" secondItem="content" secondAttribute="top" id="toolbar-top"/>
+                                <constraint firstItem="toolbar" firstAttribute="leading" secondItem="content" secondAttribute="leading" id="toolbar-left"/>
+                                <constraint firstAttribute="trailing" secondItem="toolbar" secondAttribute="trailing" id="toolbar-right"/>
+                                <constraint firstItem="web-view" firstAttribute="top" secondItem="toolbar" secondAttribute="bottom" id="web-top"/>
+                                <constraint firstItem="web-view" firstAttribute="leading" secondItem="content" secondAttribute="leading" id="web-left"/>
+                                <constraint firstAttribute="trailing" secondItem="web-view" secondAttribute="trailing" id="web-right"/>
+                                <constraint firstAttribute="bottom" secondItem="web-view" secondAttribute="bottom" id="web-bottom"/>
+                            </constraints>
+                        </customView>
+                    </subviews>
+                    <holdingPriorities>
+                        <real value="250"/>
+                        <real value="250"/>
+                    </holdingPriorities>
+                </splitView>
+            </subviews>
+            <constraints>
+                <constraint firstItem="split" firstAttribute="top" secondItem="view-main" secondAttribute="top" id="split-top"/>
+                <constraint firstItem="split" firstAttribute="leading" secondItem="view-main" secondAttribute="leading" id="split-left"/>
+                <constraint firstAttribute="trailing" secondItem="split" secondAttribute="trailing" id="split-right"/>
+                <constraint firstAttribute="bottom" secondItem="split" secondAttribute="bottom" id="split-bottom"/>
+            </constraints>
+            <point key="canvasLocation" x="139" y="154"/>
+        </customView>
+    </objects>
+    <resources>
+        <image name="chevron.left" catalog="system" width="15" height="15"/>
+        <image name="chevron.right" catalog="system" width="15" height="15"/>
+        <image name="house" catalog="system" width="15" height="15"/>
+    </resources>
+</document>

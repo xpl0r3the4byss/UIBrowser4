@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="21701" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="21701"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="AppearancePreferencesViewController" customModule="UIBrowser4" customModuleProvider="target">
+            <connections>
+                <outlet property="accentColorPopup" destination="accent-popup" id="accent-out"/>
+                <outlet property="appearanceSegmentedControl" destination="appearance-control" id="appearance-out"/>
+                <outlet property="followSystemCheckbox" destination="follow-check" id="follow-out"/>
+                <outlet property="view" destination="view-main" id="view-out"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <customView id="view-main">
+            <rect key="frame" x="0.0" y="0.0" width="450" height="300"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <subviews>
+                <box title="Appearance" translatesAutoresizingMaskIntoConstraints="NO" id="appearance-box">
+                    <rect key="frame" x="17" y="16" width="416" height="264"/>
+                    <view key="contentView" id="box-content">
+                        <rect key="frame" x="3" y="3" width="410" height="244"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="appearance-label">
+                                <rect key="frame" x="18" y="208" width="84" height="16"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Appearance:" id="appearance-label-cell">
+                                    <font key="font" usesAppearanceFont="YES"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <segmentedControl verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="appearance-control">
+                                <rect key="frame" x="108" y="205" width="284" height="24"/>
+                                <segmentedCell key="cell" borderStyle="border" alignment="left" style="rounded" trackingMode="selectOne" id="appearance-cell">
+                                    <font key="font" metaFont="system"/>
+                                    <segments>
+                                        <segment label="Light"/>
+                                        <segment label="Dark" selected="YES" tag="1"/>
+                                    </segments>
+                                </segmentedCell>
+                                <connections>
+                                    <action selector="appearanceChanged:" target="-2" id="appearance-action"/>
+                                </connections>
+                            </segmentedControl>
+                            <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="follow-check">
+                                <rect key="frame" x="108" y="168" width="284" height="18"/>
+                                <buttonCell key="cell" type="check" title="Follow system appearance" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="follow-cell">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="followSystemChanged:" target="-2" id="follow-action"/>
+                                </connections>
+                            </button>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="accent-label">
+                                <rect key="frame" x="18" y="128" width="84" height="16"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Accent Color:" id="accent-label-cell">
+                                    <font key="font" usesAppearanceFont="YES"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                            <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="accent-popup">
+                                <rect key="frame" x="108" y="124" width="284" height="25"/>
+                                <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="accent-cell">
+                                    <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                    <menu key="menu" id="accent-menu"/>
+                                </popUpButtonCell>
+                                <connections>
+                                    <action selector="accentColorChanged:" target="-2" id="accent-action"/>
+                                </connections>
+                            </popUpButton>
+                        </subviews>
+                        <constraints>
+                            <constraint firstItem="appearance-label" firstAttribute="leading" secondItem="box-content" secondAttribute="leading" constant="20" id="appearance-label-left"/>
+                            <constraint firstItem="appearance-label" firstAttribute="top" secondItem="box-content" secondAttribute="top" constant="20" id="appearance-label-top"/>
+                            <constraint firstItem="appearance-label" firstAttribute="width" secondItem="accent-label" secondAttribute="width" id="appearance-label-width"/>
+                            
+                            <constraint firstItem="appearance-control" firstAttribute="centerY" secondItem="appearance-label" secondAttribute="centerY" id="appearance-control-center"/>
+                            <constraint firstItem="appearance-control" firstAttribute="leading" secondItem="appearance-label" secondAttribute="trailing" constant="8" id="appearance-control-left"/>
+                            <constraint firstAttribute="trailing" secondItem="appearance-control" secondAttribute="trailing" constant="20" id="appearance-control-right"/>
+                            
+                            <constraint firstItem="follow-check" firstAttribute="top" secondItem="appearance-control" secondAttribute="bottom" constant="24" id="follow-check-top"/>
+                            <constraint firstItem="follow-check" firstAttribute="leading" secondItem="appearance-control" secondAttribute="leading" id="follow-check-left"/>
+                            <constraint firstItem="follow-check" firstAttribute="trailing" secondItem="appearance-control" secondAttribute="trailing" id="follow-check-right"/>
+                            
+                            <constraint firstItem="accent-label" firstAttribute="leading" secondItem="appearance-label" secondAttribute="leading" id="accent-label-left"/>
+                            <constraint firstItem="accent-label" firstAttribute="top" secondItem="follow-check" secondAttribute="bottom" constant="24" id="accent-label-top"/>
+                            
+                            <constraint firstItem="accent-popup" firstAttribute="centerY" secondItem="accent-label" secondAttribute="centerY" id="accent-popup-center"/>
+                            <constraint firstItem="accent-popup" firstAttribute="leading" secondItem="appearance-control" secondAttribute="leading" id="accent-popup-left"/>
+                            <constraint firstItem="accent-popup" firstAttribute="trailing" secondItem="appearance-control" secondAttribute="trailing" id="accent-popup-right"/>
+                        </constraints>
+                    </view>
+                </box>
+            </subviews>
+            <constraints>
+                <constraint firstItem="appearance-box" firstAttribute="leading" secondItem="view-main" secondAttribute="leading" constant="20" id="box-left"/>
+                <constraint firstAttribute="trailing" secondItem="appearance-box" secondAttribute="trailing" constant="20" id="box-right"/>
+                <constraint firstItem="appearance-box" firstAttribute="top" secondItem="view-main" secondAttribute="top" constant="20" id="box-top"/>
+                <constraint firstAttribute="bottom" secondItem="appearance-box" secondAttribute="bottom" constant="20" id="box-bottom"/>
+            </constraints>
+            <point key="canvasLocation" x="139" y="154"/>
+        </customView>
+    </objects>
+</document>

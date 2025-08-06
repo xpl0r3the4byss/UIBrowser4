@@ -60,14 +60,14 @@
 			containerPortal = 9909E8381E71CDD800D8F827 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 9909E83F1E71CDD800D8F827;
-			remoteInfo = UIBrowser3;
+			remoteInfo = UIBrowser4;
 		};
 		9909E85D1E71CDD800D8F827 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9909E8381E71CDD800D8F827 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 9909E83F1E71CDD800D8F827;
-			remoteInfo = UIBrowser3;
+			remoteInfo = UIBrowser4;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -305,7 +305,7 @@
 			dependencies = (
 			);
 			name = UIBrowser4;
-			productName = UIBrowser3;
+			productName = UIBrowser4;
 			productReference = 9909E8401E71CDD800D8F827 /* UI Browser.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -323,7 +323,7 @@
 				9909E8531E71CDD800D8F827 /* PBXTargetDependency */,
 			);
 			name = UIBrowser4Tests;
-			productName = UIBrowser3Tests;
+			productName = UIBrowser4Tests;
 			productReference = 9909E8511E71CDD800D8F827 /* UIBrowser4Tests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
@@ -341,7 +341,7 @@
 				9909E85E1E71CDD800D8F827 /* PBXTargetDependency */,
 			);
 			name = UIBrowser4UITests;
-			productName = UIBrowser3UITests;
+			productName = UIBrowser4UITests;
 			productReference = 9909E85C1E71CDD800D8F827 /* UIBrowser4UITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
@@ -708,9 +708,9 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
-				INFOPLIST_FILE = UIBrowser3Tests/Info.plist;
+				INFOPLIST_FILE = UIBrowser4Tests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.pfiddlesoft.UIBrowser3Tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pfiddlesoft.UIBrowser4Tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_SWIFT3_OBJC_INFERENCE = On;
 				SWIFT_VERSION = 4.0;
@@ -725,9 +725,9 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
-				INFOPLIST_FILE = UIBrowser3Tests/Info.plist;
+				INFOPLIST_FILE = UIBrowser4Tests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.pfiddlesoft.UIBrowser3Tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pfiddlesoft.UIBrowser4Tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_SWIFT3_OBJC_INFERENCE = On;
 				SWIFT_VERSION = 4.0;
@@ -741,13 +741,13 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
-				INFOPLIST_FILE = UIBrowser3UITests/Info.plist;
+				INFOPLIST_FILE = UIBrowser4UITests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.pfiddlesoft.UIBrowser3UITests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pfiddlesoft.UIBrowser4UITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_SWIFT3_OBJC_INFERENCE = On;
 				SWIFT_VERSION = 4.0;
-				TEST_TARGET_NAME = UIBrowser3;
+				TEST_TARGET_NAME = UIBrowser4;
 			};
 			name = Debug;
 		};
@@ -757,13 +757,13 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
-				INFOPLIST_FILE = UIBrowser3UITests/Info.plist;
+				INFOPLIST_FILE = UIBrowser4UITests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.pfiddlesoft.UIBrowser3UITests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pfiddlesoft.UIBrowser4UITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_SWIFT3_OBJC_INFERENCE = On;
 				SWIFT_VERSION = 4.0;
-				TEST_TARGET_NAME = UIBrowser3;
+				TEST_TARGET_NAME = UIBrowser4;
 			};
 			name = Release;
 		};

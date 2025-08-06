@@ -1,6 +1,6 @@
 //
 //  DetailButtonExtension.swift
-//  UIBrowser3
+//  UIBrowser4
 //
 //  Created by Bill Cheeseman on 2017-11-22.
 //  Copyright © 2017-2020 Bill Cheeseman. All rights reserved. Used by permission.

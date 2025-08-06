@@ -1,6 +1,6 @@
 //
 //  OutlineTabItemViewController.swift
-//  UIBrowser3
+//  UIBrowser4
 //
 //  Created by Bill Cheeseman on 2017-03-10.
 //  Copyright © 2003-2020 Bill Cheeseman. All rights reserved. Used by permission.
@@ -25,8 +25,76 @@ import Cocoa
 
  The outline view's primary navigation tool is a path control at the top of the outline tab view item. See ElementPathControlManager.swift for details. The outline view also supports navigation using the mouse and keyboard to select parent, sibling and child UI elements at any level in the currently displayed outline. A contextual menu like that in the list view is not needed because an outline view already incorporates equivalent functionality.
  */
-class OutlineTabItemViewController: NSViewController, NSOutlineViewDataSource, NSOutlineViewDelegate {
+class OutlineTabItemViewController: BaseElementViewController, NSOutlineViewDataSource, NSOutlineViewDelegate {
 
+    // MARK: - Error Handling
+    
+    enum OutlineError: LocalizedError {
+        case elementInvalid
+        case elementDestroyed
+        case invalidSelection
+        case nodeNotFound
+        case unexpectedNilValue
+        case unknownError
+        
+        var errorDescription: String? {
+            switch self {
+            case .elementInvalid:
+                return "Invalid accessibility element"
+            case .elementDestroyed:
+                return "Element has been destroyed"
+            case .invalidSelection:
+                return "Invalid selection in outline"
+            case .nodeNotFound:
+                return "Node not found in data model"
+            case .unexpectedNilValue:
+                return "Unexpected nil value encountered"
+            case .unknownError:
+                return "Unknown error occurred"
+            }
+        }
+    }
+    
+    // MARK: - State Management
+    
+    private actor OutlineState {
+        var pendingUpdates: Set<Int> = []
+        var errorState: OutlineError?
+        var isUpdating = false
+        
+        func startUpdate() {
+            isUpdating = true
+        }
+        
+        func endUpdate() {
+            isUpdating = false
+        }
+        
+        func addPendingUpdate(_ level: Int) {
+            pendingUpdates.insert(level)
+        }
+        
+        func removePendingUpdate(_ level: Int) {
+            pendingUpdates.remove(level)
+        }
+        
+        func setError(_ error: OutlineError?) {
+            errorState = error
+        }
+        
+        func isUpdatePending(_ level: Int) -> Bool {
+            return pendingUpdates.contains(level)
+        }
+        
+        func reset() {
+            pendingUpdates.removeAll()
+            errorState = nil
+            isUpdating = false
+        }
+    }
+    
+    private let outlineState = OutlineState()
+    
     // MARK: - PROPERTIES
     
     // MARK: Access to storyboard scenes.
@@ -59,6 +127,16 @@ class OutlineTabItemViewController: NSViewController, NSOutlineViewDataSource, N
     /// An outlet connected to the path control.
     @IBOutlet weak var outlinePathControl: NSPathControl!
     
+    // MARK: - Combine Subscriptions
+    
+    private var cancellables = Set<AnyCancellable>()
+    
+    // MARK: - ElementViewProtocol Implementation
+    
+    override var pathControl: NSPathControl {
+        return outlinePathControl
+    }
+    
     /// An outlet connected to the element outline view.
     @IBOutlet weak var elementOutline: NSOutlineView!
     
@@ -68,6 +146,8 @@ class OutlineTabItemViewController: NSViewController, NSOutlineViewDataSource, N
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        setupStateObservation()
         
         // Set the shared type property to self to give access to this object from any other object by referencing OutlineTabItemViewController.sharedInstance.
         OutlineTabItemViewController.sharedInstance = self
@@ -86,24 +166,54 @@ class OutlineTabItemViewController: NSViewController, NSOutlineViewDataSource, N
      
      Called in the `MasterSplitItemViewController` `updateView()` method when the user selects a new target and the top tab view item is the outline tab view item. Also called when the user Shift-clicks the Refresh Application button to refresh the application to root.
      */
-    func updateView() {
-        // Display the data model's initial contents. Called in the MasterSplitItemViewController updateView() method when the user selects a new target.
-        // The data model does not need to be updated because it was updated in updateApplication(forNewTarget:usingTargetElement:), and it will not need to be displayed in the outlineViewSelectionDidChange(_:) delegate method because it is displayed here. See outlineViewSelectionDidChange(_:) for more information.
+    private func setupStateObservation() {
+        // Observe current element state
+        ElementDataModel.statePublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] state in
+                guard let self = self else { return }
+                
+                if state.isLoading {
+                    // Show loading state
+                    elementOutline.isEnabled = false
+                } else {
+                    // Update outline state
+                    elementOutline.isEnabled = true
+                    elementOutline.reloadData()
+                    
+                    if let path = state.currentPath {
+                        // Expand path to current element
+                        let dataSource = ElementDataModel.sharedInstance
+                        for level in 0..<path.length {
+                            let node = dataSource.nodeAt(level: level, index: path.index(atPosition: level))
+                            performIgnoringDelegate(#selector(NSOutlineView.expandItem(_:)), with: node)
+                        }
+                        
+                        // Select current element
+                        let currentNode = dataSource.node(atIndexPath: path)
+                        let row = elementOutline.row(forItem: currentNode)
+                        elementOutline.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
+                        elementOutline.scrollRowToVisible(row)
+                    }
+                    
+                    view.window?.makeFirstResponder(elementOutline)
+                }
+            }
+            .store(in: &cancellables)
+    }
+    
+    @MainActor
+    override func updateView() async throws {
+        try await super.updateView()
+        
         let dataSource = ElementDataModel.sharedInstance
         
-        // Display the path control.
-        elementPathControlManager.updateTargetSelection(for: outlinePathControl)
-        
-        // Display the element outline.
+        // Display the element outline
         let node = dataSource.nodeAt(level: 0, index: 0)
         elementOutline.reloadItem(node, reloadChildren: true)
-        
-        // The current element is the root application UI element or the SystemWide element, and it is automatically selected because the Selection Empty setting is deselected in Main.storyboard and there is only one UI element at the root application level of the accessibility hierarchy. The first row is expanded to display its children.
         elementOutline.expandItem(node)
         
         view.window?.makeFirstResponder(elementOutline)
-        
-        // TODO: The attributes drawer etc. should show the application info.
     }
     
     /**
@@ -111,7 +221,8 @@ class OutlineTabItemViewController: NSViewController, NSOutlineViewDataSource, N
      
      Called in `MasterSplitItemViewController` `showView()` when the user chooses the outline view in the Master tab view item segmented control or the View > UI Elements menu, and in the selectElement(_:) action method when the user selects a new element using the outline path control.
      */
-    func showView() {
+    @MainActor
+    func showView() async throws {
         // Display the data model's current contents. Displays the current selection path, collapsing all sibling rows that are not needed to display it and expanding those that are needed.
         
         // Select the current element and display its ancestors, siblings and children.
@@ -300,7 +411,57 @@ class OutlineTabItemViewController: NSViewController, NSOutlineViewDataSource, N
         return nil
     }
     
+    @MainActor
     func outlineViewSelectionDidChange(_ notification: Notification) {
+        Task {
+            do {
+                await outlineState.startUpdate()
+                defer { Task { await outlineState.endUpdate() } }
+                
+                let dataSource = ElementDataModel.sharedInstance
+                if isManualSelection {
+                    isManualSelection = false
+                    
+                    guard let outline = notification.object as? NSOutlineView,
+                          outline.selectedRow >= 0 else {
+                        throw OutlineError.invalidSelection
+                    }
+                    
+                    // Get selected element info
+                    let selectedLevel = outline.level(forRow: outline.selectedRow)
+                    guard let selectedItem = outline.item(atRow: outline.selectedRow) else {
+                        throw OutlineError.unexpectedNilValue
+                    }
+                    
+                    let selectedIndex = outline.childIndex(forItem: selectedItem)
+                    let selectedNode = dataSource.nodeAt(level: selectedLevel, index: selectedIndex)
+                    let selectedPath = await dataSource.indexPath(ofNode: selectedNode)
+                    
+                    // Handle path collapsing
+                    let expandedIndexPath = selectedPath as IndexPath
+                    if var currentPath = await dataSource.currentElementIndexPath {
+                        currentPath = currentPath as IndexPath
+                        while !expandedIndexPath.starts(with: currentPath) {
+                            elementOutline.collapseItem(dataSource.node(atIndexPath: currentPath as NSIndexPath))
+                            currentPath.removeLast()
+                        }
+                    }
+                    
+                    // Update model and interface
+                    try await dataSource.updateDataModelForCurrentElementAt(level: selectedLevel, index: selectedIndex)
+                    elementOutline.expandItem(selectedNode)
+                    elementPathControlManager.displayPathControl(outlinePathControl)
+                }
+            } catch {
+                await outlineState.setError(error as? OutlineError ?? .unknownError)
+                // Present error to user
+                let alert = NSAlert()
+                alert.messageText = "Error Updating Selection"
+                alert.informativeText = error.localizedDescription
+                alert.alertStyle = .warning
+                alert.runModal()
+            }
+        }
         // Optional delegate method per the NSOutlineViewDelegate formal protocol. Changes to the outline view's selection are handled by this delegate method instead of an action method connected to the outline view, although either approach is possible. One reason to prefer the delegate approach is that this delegate method responds to keyboard arrow key presses as well as mouse clicks, while an action method ignores the arrow keys. However, the delegate method responds to programmatic selections as well as manual selections, which may require special handling, as UI Browser does with the isManualSelection flag here to avoid redundant data model updates for programmatic selections.
         // UI Browser's outline view is designed to display only one expanded path at a time, the current element selection path, similar to the browser view. When the user selects a new row, UI Browser collapses the previous selection path back to the shortest path shared with the new selection path. Selecting a row automatically expands it, and expanding a row automatically selects it.
         // This delegate method is triggered in several different ways, depending on whether the user changed the UI element selection using the Target menu, the segmented control, the path control pop-up menu, or the mouse or keyboard. The isManualSelection flag is used to track the data model and outline view update and display process in the two different directions in which they occur, (a) programmatic selections that cause or use a data model update which then requires display in the outline view and (b) manual selections that change the list view display which then requires a data model update. In the first group, (a), the outline view's' row selection has not yet been displayed when a menu or the segmented control triggers this method programmatically (1) when the user chooses a target application in the menu bar's Target menu or the Target popup button's menu while the outline view is showing, (2) when the user uses the segmented control or View > UI Elements menu to switch into the outline view from another view, or (3) when the user selects an element using the outline path control pop-up menu. (The outline view does not use a contextual menu, as the list view does.) UI Browser is designed so that all three of the cases in the first group display the data model update immediately, before this delegate method is triggered, and the isManualSelection flag has already been set to false to prevent this delegate method from reduntantly updating and displaying the data model again. In the second group, (b), the data model has not yet been updated when the mouse or keyboard triggers this method manually (4) when the user selects an element by clicking the mouse or pressing an arrow key in the outline view and the selection is immediately displayed. UI Browser sets the isManualSelection flag to true to signal this delegate method that it needs to update the data model and display the update in affected views, such as the outline path control.

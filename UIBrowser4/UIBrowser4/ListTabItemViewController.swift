@@ -1,6 +1,6 @@
 //
 //  ListTabItemViewController.swift
-//  UIBrowser3
+//  UIBrowser4
 //
 //  Created by Bill Cheeseman on 2017-03-10.
 //  Copyright © 2003-2020 Bill Cheeseman. All rights reserved. Used by permission.
@@ -27,7 +27,84 @@ import Cocoa
  
  The list view's primary navigation tool is a path control at the top of the list tab view item. See ElementPathControlManager.swift for details. The list view also supports navigation using the mouse and keyboard to select sibling UI elements in the currently displayed list, and a two-level contextual menu to select a child of any UI element in the currently displayed list in a manner similar to clicking a row in the outline view.
 */
-class ListTabItemViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate, NSMenuDelegate {
+class ListTabItemViewController: BaseElementViewController, NSTableViewDataSource, NSTableViewDelegate, NSMenuDelegate {
+    
+    // MARK: - Error Handling
+    
+    enum ListError: LocalizedError {
+        case elementInvalid
+        case elementDestroyed
+        case invalidSelection
+        case nodeNotFound
+        case menuError
+        case unexpectedNilValue
+        case unknownError
+        
+        var errorDescription: String? {
+            switch self {
+            case .elementInvalid:
+                return "Invalid accessibility element"
+            case .elementDestroyed:
+                return "Element has been destroyed"
+            case .invalidSelection:
+                return "Invalid selection in list"
+            case .nodeNotFound:
+                return "Node not found in data model"
+            case .menuError:
+                return "Error in menu operation"
+            case .unexpectedNilValue:
+                return "Unexpected nil value encountered"
+            case .unknownError:
+                return "Unknown error occurred"
+            }
+        }
+    }
+    
+    // MARK: - State Management
+    
+    private actor ListState {
+        var pendingUpdates: Set<Int> = []
+        var errorState: ListError?
+        var isUpdating = false
+        var currentMenuNode: ElementDataModel.ElementNodeInfo?
+        
+        func startUpdate() {
+            isUpdating = true
+        }
+        
+        func endUpdate() {
+            isUpdating = false
+        }
+        
+        func addPendingUpdate(_ row: Int) {
+            pendingUpdates.insert(row)
+        }
+        
+        func removePendingUpdate(_ row: Int) {
+            pendingUpdates.remove(row)
+        }
+        
+        func setError(_ error: ListError?) {
+            errorState = error
+        }
+        
+        func isUpdatePending(_ row: Int) -> Bool {
+            return pendingUpdates.contains(row)
+        }
+        
+        func setCurrentMenuNode(_ node: ElementDataModel.ElementNodeInfo?) {
+            currentMenuNode = node
+        }
+        
+        func reset() {
+            pendingUpdates.removeAll()
+            errorState = nil
+            isUpdating = false
+            currentMenuNode = nil
+        }
+    }
+    
+    private let listState = ListState()
     
     // MARK: - PROPERTIES
     
@@ -60,6 +137,16 @@ class ListTabItemViewController: NSViewController, NSTableViewDataSource, NSTabl
     
     /// An outlet connected to the path control.
     @IBOutlet weak var listPathControl: NSPathControl!
+    
+    // MARK: - Combine Subscriptions
+    
+    private var cancellables = Set<AnyCancellable>()
+    
+    // MARK: - ElementViewProtocol Implementation
+    
+    override var pathControl: NSPathControl {
+        return listPathControl
+    }
 
     /// An outlet connected to the element list view.
     @IBOutlet weak var elementList: NSTableView!
@@ -70,6 +157,8 @@ class ListTabItemViewController: NSViewController, NSTableViewDataSource, NSTabl
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        setupStateObservation()
         
         // Set the shared type property to self to give access to this object from any other object by referencing ListTabItemViewController.sharedInstance.
         ListTabItemViewController.sharedInstance = self
@@ -88,20 +177,42 @@ class ListTabItemViewController: NSViewController, NSTableViewDataSource, NSTabl
      
      Called in the `MasterSplitItemViewController` `updateView()` method when the user selects a new target and the top tab view item is the list tab view item. Also called when the user Shift-clicks the Refresh Application button to refresh the application to root.
      */
-    func updateView() {
-        // Display the data model's initial contents. Called in the MasterSplitItemViewController updateView() method when the user selects a new target.
-        // The data model does not need to be updated because it was updated in updateApplication(forNewTarget:usingTargetElement:), and it will not need to be displayed in the tableViewSelectionDidChange(_:) delegate method because it is displayed here. See tableViewSelectionDidChange(_:) for more information.
+    private func setupStateObservation() {
+        // Observe current element state
+        ElementDataModel.statePublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] state in
+                guard let self = self else { return }
+                
+                if state.isLoading {
+                    // Show loading state
+                    elementList.isEnabled = false
+                } else {
+                    // Update list state
+                    elementList.isEnabled = true
+                    elementList.reloadData()
+                    
+                    if let path = state.currentPath {
+                        // Select current element
+                        let selectedIndex = path.index(atPosition: path.length - 1)
+                        elementList.selectRowIndexes(IndexSet(integer: selectedIndex), byExtendingSelection: false)
+                        elementList.scrollRowToVisible(selectedIndex)
+                    }
+                    
+                    view.window?.makeFirstResponder(elementList)
+                }
+            }
+            .store(in: &cancellables)
+    }
+    
+    @MainActor
+    override func updateView() async throws {
+        try await super.updateView()
         
-        // Display the path control.
-        elementPathControlManager.updateTargetSelection(for: listPathControl)
-
-        // Display the element list.
+        // Display the element list
         elementList.reloadData()
         
-        // The current element is the root application UI element or the SystemWide element, and it is automatically selected because the Selection Empty setting is deselected in Main.storyboard and there is only one UI element at the root application level of the accessibility hierarchy.
         view.window?.makeFirstResponder(elementList)
-
-        // TODO: The attributes drawer etc. should show the application info.
     }
     
     /**
@@ -109,7 +220,8 @@ class ListTabItemViewController: NSViewController, NSTableViewDataSource, NSTabl
      
      Called in `MasterSplitItemViewController` `showView()` when the user chooses the list view in the Master tab view item segmented control or the View > UI Elements menu and in the selectElement(_:) and selectElementWithContextMenu(_:) action methods when the user selects a new element using the list path control or the list view's contextual menu.
      */
-    func showView() {
+    @MainActor
+    func showView() async throws {
         // Display the data model's current contents. Called in the showMasterTabItem(_:) action method when the user chooses the list view in the masterTabViewSelector segmented control or the View > UI Elements menu.
         
         // Select the current element and display its siblings.
@@ -168,6 +280,34 @@ class ListTabItemViewController: NSViewController, NSTableViewDataSource, NSTabl
      */
     // TODO: Update the rest of the UI Browser interface based on the selected element.
     @objc func selectElement(_ sender: NSMenuItem) {
+        Task {
+            do {
+                await listState.startUpdate()
+                defer { Task { await listState.endUpdate() } }
+                
+                let dataSource = ElementDataModel.sharedInstance
+                await dataSource.unsaveCurrentElementIndexPath()
+                
+                if let selectedNode = sender.representedObject as? ElementDataModel.ElementNodeInfo {
+                    let selectedIndexPath = await dataSource.indexPath(ofNode: selectedNode)
+                    let selectedLevel = selectedIndexPath.length - 1
+                    let selectedIndex = selectedIndexPath.index(atPosition: selectedLevel)
+                    
+                    try await dataSource.updateDataModelForCurrentElementAt(level: selectedLevel, index: selectedIndex)
+                    try await showView()
+                } else {
+                    throw ListError.unexpectedNilValue
+                }
+            } catch {
+                await listState.setError(error as? ListError ?? .unknownError)
+                // Present error to user
+                let alert = NSAlert()
+                alert.messageText = "Error Selecting Element"
+                alert.informativeText = error.localizedDescription
+                alert.alertStyle = .warning
+                alert.runModal()
+            }
+        }
         // Action method connected programmatically to the sending list path control pop-up menu item in the ElementPathControlManager menuNeedsUpdate(_:) delegate method using MasterSplitItemViewController currentTabItemSelectElementAction(). The @objc attribute is required to use the #selector expression when connecting the action. Although it triggers the tableViewSelectionDidChange(_:) delegate method, the delegate method does nothing because this method does it all.
         // The data model does not need to be updated or displayed in the tableViewSelectionDidChange(_:) delegate method because it is updated and displayed here. See the tableViewSelectionDidChange(_:) delegate method for details.
 
@@ -221,6 +361,35 @@ class ListTabItemViewController: NSViewController, NSTableViewDataSource, NSTabl
     
     // TODO: Update the rest of the UI Browser interface based on the selected element.
     @objc func selectElementWithContextMenu(_ sender: NSMenuItem) {
+        Task {
+            do {
+                await listState.startUpdate()
+                defer { Task { await listState.endUpdate() } }
+                
+                let dataSource = ElementDataModel.sharedInstance
+                await dataSource.unsaveCurrentElementIndexPath()
+                
+                guard let selectedNode = sender.representedObject as? ElementDataModel.ElementNodeInfo else {
+                    throw ListError.unexpectedNilValue
+                }
+                
+                let selectedIndexPath = await dataSource.indexPath(ofNode: selectedNode)
+                let selectedLevel = selectedIndexPath.length - 1
+                let selectedIndex = selectedIndexPath.index(atPosition: selectedLevel)
+                
+                try await dataSource.updateDataModelForCurrentElementAt(level: selectedLevel, index: selectedIndex)
+                try await showView()
+                
+            } catch {
+                await listState.setError(error as? ListError ?? .unknownError)
+                // Present error to user
+                let alert = NSAlert()
+                alert.messageText = "Error Selecting Element"
+                alert.informativeText = error.localizedDescription
+                alert.alertStyle = .warning
+                alert.runModal()
+            }
+        }
         // Action method connected to the sending contextual menu item programmatically in the ListTabItemViewController menuNeedsUpdate(_:) delegate method. This method is not called in any other way. It triggers the tableViewSelectionDidChange(_:) delegate method.
         // The data model does not need to be updated or displayed in the tableViewSelectionDidChange(_:) delegate method because it is updated and displayed here. See the tableViewSelectionDidChange(_:) delegate method for details.
 

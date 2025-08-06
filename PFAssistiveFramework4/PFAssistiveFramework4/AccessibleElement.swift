@@ -46,6 +46,98 @@ import ApplicationServices
  
  The `AccessibleElement` class wraps a Core Foundation `AXUIElement` object. It allows an assistive application or other accessibility client to exercise all of the powers made available by Apple's accessibility API using standard Swift code. In addition, it enhances the power of the accessibility API and increases its ease of use by making familiar techniques like delegate methods and notifications readily available. These support the ability to observe the destruction of an element in the user interface.
  */
+
+// MARK: - Error Handling
+
+/// Errors that can occur when working with AccessibleElement
+public enum AccessibleElementError: LocalizedError {
+    case invalidProcess(pid: pid_t)
+    case missingRole
+    case invalidAttribute(name: String)
+    case attributeNotSettable(name: String)  
+    case invalidUIElement
+    case invalidValue(value: Any)
+    case observerCreationFailed
+    case destroyedElement
+    case accessDenied
+    case timeout
+    case unknownError(code: Int)
+    
+    public var errorDescription: String? {
+        switch self {
+        case .invalidProcess(let pid):
+            return "Invalid process ID: \(pid)"
+        case .missingRole:
+            return "UI Element missing required role attribute"
+        case .invalidAttribute(let name):
+            return "Invalid attribute: \(name)"
+        case .attributeNotSettable(let name):
+            return "Attribute not settable: \(name)"
+        case .invalidUIElement:
+            return "Invalid UI Element reference"
+        case .invalidValue(let value):
+            return "Invalid value: \(value)"
+        case .observerCreationFailed:
+            return "Failed to create accessibility observer"
+        case .destroyedElement:
+            return "UI Element has been destroyed"
+        case .accessDenied:
+            return "Access denied by system"
+        case .timeout:
+            return "Operation timed out"
+        case .unknownError(let code):
+            return "Unknown error occurred (code: \(code))"
+        }
+    }
+}
+// MARK: - State Management Actor
+
+/// Actor for managing thread-safe state of AccessibleElement
+private actor ElementState {
+    var isValid: Bool = false
+    var isDestroyed: Bool = false
+    var cachedAttributes: [String: String]?
+    var indexPath: IndexPath?
+    weak var delegate: AccessibleElementDelegate?
+    var destructionObservers = NSHashTable<AnyObject>.weakObjects()
+    
+    func setValid(_ valid: Bool) {
+        isValid = valid
+    }
+    
+    func setDestroyed(_ destroyed: Bool) {
+        isDestroyed = destroyed
+    }
+    
+    func setCachedAttributes(_ attributes: [String: String]?) {
+        cachedAttributes = attributes
+    }
+    
+    func setIndexPath(_ path: IndexPath?) {
+        indexPath = path
+    }
+    
+    func setDelegate(_ newDelegate: AccessibleElementDelegate?) {
+        delegate = newDelegate
+    }
+    
+    func addObserver(_ observer: AccessibleElementDestructionObserver) {
+        destructionObservers.add(observer)
+    }
+    
+    func removeObserver(_ observer: AccessibleElementDestructionObserver) {
+        destructionObservers.remove(observer)
+    }
+    
+    func removeAllObservers() {
+        destructionObservers.removeAllObjects()
+    }
+    
+    func getObservers() -> [AccessibleElementDestructionObserver] {
+        return destructionObservers.allObjects.compactMap { $0 as? AccessibleElementDestructionObserver }
+    }
+}
+
 open class AccessibleElement: NSObject {
     
     // MARK: - PROPERTIES
@@ -53,8 +145,17 @@ open class AccessibleElement: NSObject {
     /// The Core Foundation accessibility API `AXUIElement` object represented by the `AccessibleElement`. An `AccessibleElement` with an `axElement` that has been destroyed or invalidated is considered invalid.
     public var axElement: AXUIElement
     
+    /// A set of observers that conform to the `AccessibleElementDestructionObserver` protocol
+    private var destructionObservers = NSHashTable<AnyObject>.weakObjects()
+    
     /// An object that conforms to the `AccessibleElementDelegate` protocol, allowing clients to use delegate methods declared in `AccessibleElement` instead of or in addition to registering to observe notifications in order to handle the destruction of `axElement` in the user interface.
-    weak public var delegate: AccessibleElementDelegate?
+    weak public var delegate: AccessibleElementDelegate? {
+        didSet {
+            if let delegate = delegate {
+                addDestructionObserver(delegate)
+            }
+        }
+    }
 
     // TODO: set isValid to false when axElement is invalidated.
     /// Whether the `AccessibleElement` has a valid `axElement`. Returns `true` until the `axElement` is destroyed or invalidated.
@@ -230,19 +331,102 @@ open class AccessibleElement: NSObject {
      
      The handler also posts `elementWasDestroyedNotification` and calls the `elementWasDestroyed(_:)` delegate method if it is implemented by the client.
      */
-    func handleDestruction() {
+    private func handleDestruction() {
+        // Notify observers that destruction is about to happen
+        for case let observer as AccessibleElementDestructionObserver in destructionObservers.allObjects {
+            observer.elementWillBeDestroyed(self)
+        }
         
-        // set the AccessibleElement's isDestroyed property to true
+        // Set the AccessibleElement's isDestroyed property to true
         self.isDestroyed = true
+        self.isValid = false
         
-        /// A `Notification` to be posted to the default Notification Center. The notification name is created in the extension on `Notification.Name` at the end of this file.
-        let notification = Notification(name: Notification.Name.elementWasDestroyedNotification, object: self, userInfo: self.cachedAttributes)
+        // Create notification info
+        let notification = Notification(name: Notification.Name.elementWasDestroyedNotification, 
+                                     object: self, 
+                                     userInfo: self.cachedAttributes)
         
-        // Call the AccessibleElementDelegate formal protocol delegate method, if implemented, so that the delegate gets the message when axElement is destroyed in the user interface.
-        self.delegate?.elementWasDestroyed(notification)
-
-        // Post a notification so that every object that registered to observe it gets the message when axElement is destroyed in the user interface.
+        // Notify observers that destruction has completed
+        for case let observer as AccessibleElementDestructionObserver in destructionObservers.allObjects {
+            observer.elementWasDestroyed(self)
+        }
+        
+        // Post notification for legacy support
         NotificationCenter.default.post(notification)
+        
+        // Call legacy delegate method for backward compatibility 
+        self.delegate?.elementWasDestroyed(notification)
+        
+        // Clean up observers
+        removeAllDestructionObservers()
+    }
+    
+    // MARK: - Lifecycle Management
+    
+    /// Validates that the element is still valid in the accessibility hierarchy
+    public func validate() -> Bool {
+        if isDestroyed {
+            return false
+        }
+        
+        // Check if the element is still valid by attempting to get its role
+        switch objectAttributeValue(for: kAXRoleAttribute) {
+        case .success(_):
+            return true
+        case .failure(_):
+            isValid = false
+            return false
+        }
+    }
+    
+    /// Invalidates the element, marking it as no longer valid
+    public func invalidate() {
+        isValid = false
+        removeAllDestructionObservers()
+    }
+    
+    /// Performs cleanup when the element is no longer needed
+    public func cleanup() {
+        invalidate()
+        axElement = nil as AXUIElement
+        cachedAttributes = nil
+    }
+    
+    // MARK: - Async Attribute Access
+    
+    /// Asynchronously gets the value of an attribute
+    public func getAttribute(_ name: String) async -> AttributeResult<AnyObject> {
+        await Task {
+            return objectAttributeValue(for: name)
+        }.value
+    }
+    
+    /// Asynchronously sets the value of an attribute
+    public func setAttribute(_ name: String, value: AnyObject) async -> AttributeResult<Void> {
+        await Task {
+            return setObjectAttributeValue(value, for: name)
+        }.value
+    }
+    
+    /// Asynchronously validates the element
+    public func validateAsync() async -> Bool {
+        await Task {
+            return validate()
+        }.value
+    }
+    
+    /// Asynchronously gets children of the element 
+    public func getChildren() async -> AttributeResult<[AccessibleElement]> {
+        await Task {
+            return self.AXChildren
+        }.value
+    }
+    
+    /// Asynchronously gets the parent of the element
+    public func getParent() async -> AttributeResult<AccessibleElement> {
+        await Task {
+            return self.AXParent
+        }.value
     }
     
     // MARK: - CLASS METHODS
@@ -344,7 +528,7 @@ open class AccessibleElement: NSObject {
     // MARK: Public methods
     // These public attribute value methods provide a general means for clients to get or set the value of any attribute of an AccessibleElement given the accessibility API attribute name. The general methods check the CFTypeRef type of the attribute to determine its Swift type. The framework's public named attribute computed properties, such as AXRole, AXParent and AXChildren, are slightly more efficient because they require no type checking.
     
-    public func attributeValue(for name: String) -> AnyObject? {
+    public func attributeValue(for name: String) -> AttributeResult<AnyObject> {
         // Returns the named attribute's value as a Core Foundation object, such as a CFString, AXUIElement or CFArray object. Core Foundation accessibility API AXUIElement objects are converted to AccessibleElement objects, whether standing alone or in an array.
         guard var object = objectAttributeValue(for: name)
             else {return nil}
@@ -372,51 +556,131 @@ open class AccessibleElement: NSObject {
     // MARK: Private methods
     // These private attribute value methods support a more efficient means for clients to get or set the value of certain specific named attributes of an AccessibleElement. The private methods are called by the framework's public named attribute computed properties, such as AXRole, AXParent and AXChildren, each of which has a known CFTypeRef type or an array of known CFTypeRef types declared in the accessibility API. As a result, none of the public properties requires the type checking done in the framework's more general public attributeValue(for:) and setAttribute(_:for:) methods. Each of these private methods returns a Swift object or an array of Swift objects corresponding to the public property's CFTypeRef, or, in the case of the AXUIElement CFTypeRef, an AccessibleElement object or an array of AccessibleElement objects. Because they require no type checking, the framework's public properties are slightly more efficient than the public attribute value methods.
     
-    private func objectAttributeValue(for name: String) -> AnyObject? {
+    private func objectAttributeValue(for name: String) -> AttributeResult<AnyObject> {
         // Returns the named attribute's value as a Core Foundation object, such as a CFString, AXUIElement or CFArray object. AXUIElement and CFArray attribute values are further processed in objectArrayAttributeValue(for:), elementAttributeValue(for:objectValue:), and elementArrayAttributeValue(for:objectValue:).
         // Wrapper for the accessibility API AXUIElementCopyAttributeValue() function.
         
-        func handleError(_ error: AXError) {
-            // TODO: Add error handling
+        if isDestroyed {
+            return .failure(.destroyedElement)
+        }
+        
+        if !isValid {
+            return .failure(.invalidUIElement) 
         }
         
         var object: AnyObject?
         let err = AXUIElementCopyAttributeValue(axElement, name as CFString, &object)
-        if err != AXError.success {
-            handleError(err)
-            return nil
+        
+        switch err {
+        case .success:
+            guard let value = object else {
+                return .failure(.invalidValue(value: "nil"))
+            }
+            return .success(value)
+            
+        case .attributeUnsupported:
+            return .failure(.invalidAttribute(name: name))
+            
+        case .noValue:
+            return .failure(.invalidValue(value: "no value"))
+            
+        case .illegalArgument:
+            return .failure(.invalidAttribute(name: name))
+            
+        case .cannotComplete:
+            return .failure(.timeout)
+            
+        case .notImplemented:
+            return .failure(.invalidAttribute(name: name))
+            
+        default:
+            return .failure(.unknownError(code: err.rawValue))
         }
-        return object
     }
     
-    private func setObjectAttributeValue(_ object: AnyObject, for name: String) {
+    private func setObjectAttributeValue(_ object: AnyObject, for name: String) -> AttributeResult<Void> {
         // Sets the named attribute's value to a Core Foundation object, such as a CFString, AXUIElement or CFArray object. AXUIElement and CFArray attribute values are first processed in setObjectArrayAttributeValue(for:), setElementAttributeValue(for:objectValue:), and setElementArrayAttributeValue(for:objectValue:).
         // Wrapper for the accessibility API AXUIElementSetAttributeValue() function.
         
-        func handleError(_ error: AXError) {
-            // TODO: Add error handling
+        if isDestroyed {
+            return .failure(.destroyedElement)
+        }
+        
+        if !isValid {
+            return .failure(.invalidUIElement)
         }
         
         let err = AXUIElementSetAttributeValue(axElement, name as CFString, object)
-        if err != AXError.success {
-            handleError(err)
+        
+        switch err {
+        case .success:
+            return .success(())
+            
+        case .attributeUnsupported:
+            return .failure(.invalidAttribute(name: name))
+            
+        case .illegalArgument:
+            return .failure(.invalidValue(value: object))
+            
+        case .attributeNotSettable:
+            return .failure(.attributeNotSettable(name: name))
+            
+        case .cannotComplete:
+            return .failure(.timeout)
+            
+        case .notImplemented:
+            return .failure(.invalidAttribute(name: name))
+            
+        default:
+            return .failure(.unknownError(code: err.rawValue))
         }
     }
     
-    private func objectArrayAttributeValue(for name: String) -> AnyObject? {
+    private func objectArrayAttributeValue(for name: String) -> AttributeResult<[AnyObject]> {
         // Returns an array of Core Foundation objects, other than Core Foundation accessibility API AXUIElement objects, that are the named attribute's value, such as an array of CFString objects.
-        guard let array: [AnyObject] = objectAttributeValue(for: name) as! [AnyObject]?
-            else {return nil}
-        // TODO: Write this
-        return array as AnyObject
+        
+        switch objectAttributeValue(for: name) {
+        case .success(let value):
+            guard let array = value as? [AnyObject] else {
+                return .failure(.invalidValue(value: value))
+            }
+            return .success(array)
+            
+        case .failure(let error):
+            return .failure(error)
+        }
     }
     
-    private func elementAttributeValue(for name: String, objectValue: AnyObject?) -> AccessibleElement? {
-        // Obtains a Core Foundation accessibility API AXUIElement object if not already provided by attributeValue(for:), and uses it to return an AccessibleElement object created by calling the designated initializer. [[[A delegate is not set.]]]
-        guard let value: AXUIElement = (objectValue != nil) ? (objectValue as! AXUIElement) : objectAttributeValue(for: name) as! AXUIElement?
-            else {return nil}
-        // TODO: Add code for class registration mechanism
-        return AccessibleElement(axElement: value)
+    private func elementAttributeValue(for name: String, objectValue: AnyObject?) -> AttributeResult<AccessibleElement> {
+        // Obtains a Core Foundation accessibility API AXUIElement object if not already provided by attributeValue(for:), and uses it to return an AccessibleElement object created by calling the designated initializer.
+        
+        if let providedValue = objectValue {
+            guard let axElement = providedValue as? AXUIElement else {
+                return .failure(.invalidValue(value: providedValue))
+            }
+            
+            guard let element = AccessibleElement(axElement: axElement) else {
+                return .failure(.invalidUIElement)
+            }
+            
+            return .success(element)
+        }
+        
+        switch objectAttributeValue(for: name) {
+        case .success(let value):
+            guard let axElement = value as? AXUIElement else {
+                return .failure(.invalidValue(value: value))
+            }
+            
+            guard let element = AccessibleElement(axElement: axElement) else {
+                return .failure(.invalidUIElement)
+            }
+            
+            return .success(element)
+            
+        case .failure(let error):
+            return .failure(error)
+        }
     }
     
     // TODO: Write func setElementAttributeValue(_:for:)?
@@ -426,11 +690,48 @@ open class AccessibleElement: NSObject {
     }
     */
     
-    private func elementArrayAttributeValue(for name: String, objectValue: AnyObject?) -> [AccessibleElement]? {
-        // Obtains an array of Core Foundation accessibility API AXUIElement objects if not already provided by attributeValue(for:), and uses it to return an array of AccessibleElement objects created by calling the designated initializer. [[[A delegate is not set.]]]
-        guard let value: [AXUIElement] = (objectValue != nil) ? (objectValue as! [AXUIElement]) : objectAttributeValue(for: name) as! [AXUIElement]?
-            else {return nil}
-        return value.compactMap {elementAttributeValue(for:name, objectValue: $0)!}
+    private func elementArrayAttributeValue(for name: String, objectValue: AnyObject?) -> AttributeResult<[AccessibleElement]> {
+        // Obtains an array of Core Foundation accessibility API AXUIElement objects if not already provided by attributeValue(for:), and uses it to return an array of AccessibleElement objects created by calling the designated initializer.
+        
+        if let providedValue = objectValue {
+            guard let axElements = providedValue as? [AXUIElement] else {
+                return .failure(.invalidValue(value: providedValue))
+            }
+            
+            var elements: [AccessibleElement] = []
+            for axElement in axElements {
+                switch elementAttributeValue(for: name, objectValue: axElement) {
+                case .success(let element):
+                    elements.append(element)
+                case .failure(let error):
+                    return .failure(error)
+                }
+            }
+            
+            return .success(elements)
+        }
+        
+        switch objectAttributeValue(for: name) {
+        case .success(let value):
+            guard let axElements = value as? [AXUIElement] else {
+                return .failure(.invalidValue(value: value))
+            }
+            
+            var elements: [AccessibleElement] = []
+            for axElement in axElements {
+                switch elementAttributeValue(for: name, objectValue: axElement) {
+                case .success(let element):
+                    elements.append(element)
+                case .failure(let error):
+                    return .failure(error)
+                }
+            }
+            
+            return .success(elements)
+            
+        case .failure(let error):
+            return .failure(error)
+        }
     }
     
     // MARK: General methods
@@ -474,78 +775,188 @@ open class AccessibleElement: NSObject {
     
     // MARK: informational attributes
 
-    public var AXRole: String? {
+    public var AXRole: AttributeResult<String> {
         // Query the accessibility API for the role of self, falling back to cachedAttributes if it fails, for example, because the element was destroyed.
-        // The init(axElement:observesDestruction:) designated initializer ensures that every AccessibleElement instance has a valid role attribute when it is created, but this property returns AXRole as an optional in case of an unexpected error.
-        if let role: AnyObject = objectAttributeValue(for: kAXRoleAttribute) {
-            return role as? String
+        // The init(axElement:observesDestruction:) designated initializer ensures that every AccessibleElement instance has a valid role attribute when it is created.
+        
+        switch objectAttributeValue(for: kAXRoleAttribute) {
+        case .success(let value):
+            guard let role = value as? String else {
+                return .failure(.invalidValue(value: value))
+            }
+            return .success(role)
+            
+        case .failure(.destroyedElement):
+            // Fall back to cached attributes for destroyed elements
+            if let cachedRole = cachedAttributes?[kAXRoleAttribute] {
+                return .success(cachedRole)
+            }
+            return .failure(.destroyedElement)
+            
+        case .failure(let error):
+            return .failure(error)
         }
-        return cachedAttributes?[kAXRoleAttribute]
     }
     
-    public var AXSubrole: String? {
+    public var AXSubrole: AttributeResult<String> {
         // Query the accessibility API for the subrole of self, falling back to cachedAttributes if it fails, for example, because the element was destroyed.
-        if let subrole: AnyObject = objectAttributeValue(for: kAXSubroleAttribute) {
-            return subrole as? String
+        
+        switch objectAttributeValue(for: kAXSubroleAttribute) {
+        case .success(let value):
+            guard let subrole = value as? String else {
+                return .failure(.invalidValue(value: value))
+            }
+            return .success(subrole)
+            
+        case .failure(.destroyedElement):
+            // Fall back to cached attributes for destroyed elements
+            if let cachedSubrole = cachedAttributes?[kAXSubroleAttribute] {
+                return .success(cachedSubrole)
+            }
+            return .failure(.destroyedElement)
+            
+        case .failure(let error):
+            return .failure(error)
         }
-        return cachedAttributes?[kAXSubroleAttribute]
     }
     
-    public var AXRoleDescription: String? {
+    public var AXRoleDescription: AttributeResult<String> {
         // Query the accessibility API for the role description of self, falling back to cachedAttributes if it fails, for example, because the element was destroyed.
-        if let roleDescription: AnyObject = objectAttributeValue(for: kAXRoleDescriptionAttribute) {
-            return roleDescription as? String
+        
+        switch objectAttributeValue(for: kAXRoleDescriptionAttribute) {
+        case .success(let value):
+            guard let description = value as? String else {
+                return .failure(.invalidValue(value: value))
+            }
+            return .success(description)
+            
+        case .failure(.destroyedElement):
+            // Fall back to cached attributes for destroyed elements
+            if let cachedDescription = cachedAttributes?[kAXRoleDescriptionAttribute] {
+                return .success(cachedDescription)
+            }
+            return .failure(.destroyedElement)
+            
+        case .failure(let error):
+            return .failure(error)
         }
-        return cachedAttributes?[kAXRoleDescriptionAttribute]
     }
     
-    public var AXHelp: String? {
+    public var AXHelp: AttributeResult<String> {
         // Query the accessibility API for the help text of self, falling back to cachedAttributes if it fails, for example, because the element was destroyed.
-        if let help: AnyObject = objectAttributeValue(for: kAXHelpAttribute) {
-            return help as? String
+        
+        switch objectAttributeValue(for: kAXHelpAttribute) {
+        case .success(let value):
+            guard let help = value as? String else {
+                return .failure(.invalidValue(value: value))
+            }
+            return .success(help)
+            
+        case .failure(.destroyedElement):
+            // Fall back to cached attributes for destroyed elements
+            if let cachedHelp = cachedAttributes?[kAXHelpAttribute] {
+                return .success(cachedHelp)
+            }
+            return .failure(.destroyedElement)
+            
+        case .failure(let error):
+            return .failure(error)
         }
-        return cachedAttributes?[kAXHelpAttribute]
     }
     
-    public var AXTitle: String? {
+    public var AXTitle: AttributeResult<String> {
         // Query the accessibility API for the title of self, falling back to cachedAttributes if it fails, for example, because the element was destroyed.
-        if let title: AnyObject = objectAttributeValue(for: kAXTitleAttribute) {
-            return title as? String
+        
+        switch objectAttributeValue(for: kAXTitleAttribute) {
+        case .success(let value):
+            guard let title = value as? String else {
+                return .failure(.invalidValue(value: value))
+            }
+            return .success(title)
+            
+        case .failure(.destroyedElement):
+            // Fall back to cached attributes for destroyed elements
+            if let cachedTitle = cachedAttributes?[kAXTitleAttribute] {
+                return .success(cachedTitle)
+            }
+            return .failure(.destroyedElement)
+            
+        case .failure(let error):
+            return .failure(error)
         }
-        // TODO: Find a way to protect against changed titles that are not cached.
-        return cachedAttributes?[kAXTitleAttribute]
     }
     
     // MARK: hierarchy attributes
 
-    public var AXParent: AccessibleElement? {
-        // Query the accessibility API for the parent element of self, returning nil if self is a root application element.
-        if isRole(kAXApplicationRole) {
-            // TODO: How handle a system-wide element?
-            // A root application element has no parent.
-            return nil
+    public var AXParent: AttributeResult<AccessibleElement> {
+        // Query the accessibility API for the parent element of self, returning error if self is a root application element.
+        
+        switch AXRole {
+        case .success(let role) where role == kAXApplicationRole:
+            // A root application element has no parent
+            return .failure(.invalidAttribute(name: kAXParentAttribute))
+            
+        case .success(_):
+            return elementAttributeValue(for: kAXParentAttribute, objectValue: nil)
+            
+        case .failure(let error):
+            return .failure(error)
         }
-//            return attributeValue(for: kAXParentAttribute) as? AccessibleElement
-        return elementAttributeValue(for: kAXParentAttribute, objectValue: nil)
     }
     
-    public var AXChildren: [AccessibleElement]? {
-        // Query the accessibility API for the children elements of self, [[[returning an empty array if self has no children???]]].
-//        attributeValue(for: kAXChildrenAttribute) as? [AccessibleElement]
-        elementArrayAttributeValue(for: kAXChildrenAttribute, objectValue: nil)
+    public var AXChildren: AttributeResult<[AccessibleElement]> {
+        // Query the accessibility API for the children elements of self.
+        // Returns empty array if element has no children, or appropriate error if access fails.
+        
+        switch elementArrayAttributeValue(for: kAXChildrenAttribute, objectValue: nil) {
+        case .success(let children):
+            return .success(children)
+            
+        case .failure(.invalidValue(value: _)):
+            // No children case - return empty array
+            return .success([])
+            
+        case .failure(let error):
+            return .failure(error)
+        }
     }
     
     // MARK: application attributes
     
-    public var AXHidden: Bool {
+    public var AXHidden: AttributeResult<Bool> {
         get {
-            CFBooleanGetValue(objectAttributeValue(for: kAXHiddenAttribute) as! CFBoolean?)
+            switch objectAttributeValue(for: kAXHiddenAttribute) {
+            case .success(let value):
+                guard let boolValue = value as? CFBoolean else {
+                    return .failure(.invalidValue(value: value))
+                }
+                return .success(CFBooleanGetValue(boolValue))
+                
+            case .failure(let error):
+                return .failure(error)
+            }
         }
         set {
-            setObjectAttributeValue(newValue as CFBoolean, for: kAXHiddenAttribute)
+            switch newValue {
+            case .success(let hidden):
+                _ = setObjectAttributeValue(hidden as CFBoolean, for: kAXHiddenAttribute)
+            case .failure:
+                break // Ignore failures when setting
+            }
         }
     }
 
+}
+
+// MARK: - Protocols
+
+/// Protocol for observing element destruction
+public protocol AccessibleElementDestructionObserver: AnyObject {
+    /// Called when the element is about to be destroyed
+    func elementWillBeDestroyed(_ element: AccessibleElement)
+    
+    /// Called after the element has been destroyed
+    func elementWasDestroyed(_ element: AccessibleElement)
 }
 
 // MARK: - EXTENSIONS
@@ -554,6 +965,11 @@ extension Notification.Name {
     /// Name of the notification posted when the `AccessibleElement` is destroyed in the client's user interface. The notification object is the `AccessibleElement` that sent the notification. The `userInfo` dictionary contains the `cachedAttributes` array.
     public static let elementWasDestroyedNotification = Notification.Name(rawValue: "PFAccessibleElementWasDestroyed")
 }
+
+// MARK: - Result Types
+
+/// Result type for attribute value operations
+public typealias AttributeResult<T> = Result<T, AccessibleElementError>
 
 // MARK: - PROTOCOLS, CONFORMANCE AND SUPPORT
 
