@@ -90,6 +90,12 @@ public class AccessibleElement: NSObject {
     }
     
     // MARK: - Factory Methods
+
+    /// Checks if the application has accessibility authorization
+    public static func isProcessTrusted() -> Bool {
+        return AXIsProcessTrusted()
+    }
+
     
     /// Creates an AccessibleElement representing the system-wide accessibility element
     public static func makeSystemWideElement() -> AccessibleElement? {
@@ -123,6 +129,24 @@ public class AccessibleElement: NSObject {
         }
         
         return value
+    }
+    
+    /// Validates if an attribute can be modified
+    /// - Parameter attribute: The attribute to validate
+    /// - Returns: True if the attribute can be modified
+    public func canModifyAttribute(_ attribute: String) async throws -> Bool {
+        var value: AnyObject?
+        let result = AXUIElementCopyAttributeValue(axElement, attribute as CFString, &value)
+        
+        guard result != .attributeUnsupported else { return false }
+        guard result == .success else { throw AccessibleElementError.apiError(result) }
+        
+        var isSettable = DarwinBoolean(false)
+        let settableResult = AXUIElementIsAttributeSettable(axElement, attribute as CFString, &isSettable)
+        
+        guard settableResult == .success else { throw AccessibleElementError.apiError(settableResult) }
+        
+        return isSettable.boolValue
     }
     
     /// Sets the value of an accessibility attribute
@@ -172,7 +196,36 @@ public class AccessibleElement: NSObject {
     // MARK: - Private Methods
     
     private func setupDestructionObserver() {
-        // TODO: Implement destruction observation using AXObserver
+        var observer: AXObserver?
+        let selfPtr = Unmanaged.passUnretained(self).toOpaque()
+        
+        let result = AXObserverCreate(processID, { (observer, element, notification, refcon) in
+            guard let refcon = refcon else { return }
+            let this = Unmanaged<AccessibleElement>.fromOpaque(refcon).takeUnretainedValue()
+            
+            if notification as String == kAXUIElementDestroyedNotification as String {
+                this.isValid = false
+                this.isDestroyed = true
+                this.delegate?.elementWasDestroyed(this)
+            }
+        }, &observer)
+        
+        guard result == .success, let observer = observer else { return }
+        
+        let error = AXObserverAddNotification(
+            observer,
+            axElement,
+            kAXUIElementDestroyedNotification as CFString,
+            selfPtr
+        )
+        
+        if error == .success {
+            CFRunLoopAddSource(
+                CFRunLoopGetCurrent(),
+                AXObserverGetRunLoopSource(observer),
+                .defaultMode
+            )
+        }
     }
     
     private func cacheAttributes() {
